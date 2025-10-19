@@ -20,13 +20,17 @@ class TestFramework {
      * Set up test environment and capture console output
      */
     setup() {
+        console.log('DEBUG: TestFramework setup() called');
         // Capture console output
         this.capturedOutput = '';
+        console.log('DEBUG: About to override process.stdout.write');
         process.stdout.write = (data) => {
             this.capturedOutput += data;
         };
+        console.log('DEBUG: process.stdout.write overridden');
 
         this.startTime = process.hrtime.bigint();
+        console.log('DEBUG: TestFramework setup() complete');
     }
 
     /**
@@ -41,9 +45,16 @@ class TestFramework {
      * Create a fresh system instance for testing
      */
     createSystem() {
+        console.log('DEBUG: TestFramework creating system...');
+        console.log('DEBUG: About to create MMU...');
         const mmu = new MemoryManagementUnit();
+        console.log('DEBUG: MMU created');
+        console.log('DEBUG: About to create CPU...');
         const cpu = new RiscProcessor(mmu);
+        console.log('DEBUG: CPU created');
+        console.log('DEBUG: About to create OS...');
         const os = new OperatingSystemKernel(cpu, mmu);
+        console.log('DEBUG: OS created');
 
         return { mmu, cpu, os };
     }
@@ -176,6 +187,7 @@ class TestFramework {
      * Run a complete test case
      */
     async runTest(testName, testFunction) {
+        console.log(`DEBUG: Starting test: ${testName}`);
         const testResult = {
             name: testName,
             success: false,
@@ -186,8 +198,11 @@ class TestFramework {
         };
 
         try {
+            console.log(`DEBUG: Setting up test: ${testName}`);
             this.setup();
+            console.log(`DEBUG: Setup complete for test: ${testName}`);
 
+            console.log(`DEBUG: About to execute test function: ${testName}`);
             await testFunction();
 
             testResult.success = true;

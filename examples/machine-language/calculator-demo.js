@@ -229,9 +229,9 @@ class CalculatorDemo {
         instructions.push(...this.printMessage("3\r\n"));
 
         // Perform calculation (7 + 3)
-        // Load numbers into registers
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 7))); // LOAD R1, [R0 + 7]
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 3))); // LOAD R2, [R0 + 3]
+        // Load numbers into registers (using word-aligned addresses)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x20))); // LOAD R1, [R0 + 0x20]
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x1C))); // LOAD R2, [R0 + 0x1C]
 
         // Perform addition
         instructions.push(...this.instructionToBytes(this.createInstruction(0x03, 3, 1, 0, 0))); // ADD R3, R1 (R3 = 7 + 3 = 10)
@@ -264,9 +264,9 @@ class CalculatorDemo {
         instructions.push(...this.printCharacter(this.ASCII.EQUALS));
         instructions.push(...this.printCharacter(this.ASCII.SPACE));
 
-        // Load numbers and multiply
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 8))); // LOAD R1, [R0 + 8]
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 4))); // LOAD R2, [R0 + 4]
+        // Load numbers and multiply (using word-aligned addresses)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x24))); // LOAD R1, [R0 + 0x24]
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x20))); // LOAD R2, [R0 + 0x20]
 
         // For multiplication, we'll use repeated addition (since we don't have MUL instruction)
         // 8 * 4 = 8 + 8 + 8 + 8 = 32
@@ -290,9 +290,9 @@ class CalculatorDemo {
         instructions.push(...this.printCharacter(this.ASCII.EQUALS));
         instructions.push(...this.printCharacter(this.ASCII.SPACE));
 
-        // Load numbers for division
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 15))); // LOAD R1, [R0 + 15]
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 3)));  // LOAD R2, [R0 + 3]
+        // Load numbers for division (using word-aligned addresses)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x28))); // LOAD R1, [R0 + 0x28]
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x1C))); // LOAD R2, [R0 + 0x1C]
 
         // For division, we'll use repeated subtraction (since we don't have DIV instruction)
         // 15 / 3 = 5

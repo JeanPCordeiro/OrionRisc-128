@@ -58,7 +58,9 @@ class OperatingSystemKernel {
             console.log('Starting OS kernel initialization...');
 
             // Reset hardware components
+            console.log(`DEBUG: OS init - Before CPU reset, PC is 0x${this.cpu.getProgramCounter().toString(16)}`);
             this.cpu.reset();
+            console.log(`DEBUG: OS init - After CPU reset, PC is 0x${this.cpu.getProgramCounter().toString(16)}`);
             this.mmu.clearMemory();
 
             // Set up system call handler
@@ -178,6 +180,8 @@ class OperatingSystemKernel {
             }
 
             // Load program into memory
+            console.log(`DEBUG: OS loading ${byteData.length} bytes at 0x${loadAddress.toString(16)}`);
+            console.log(`DEBUG: First 8 bytes: [${byteData.slice(0, 8).map(b => `0x${b.toString(16)}`).join(', ')}]`);
             this.mmu.loadMemory(loadAddress, byteData);
 
             // Store program metadata
@@ -251,7 +255,12 @@ class OperatingSystemKernel {
                 throw new Error(`Invalid entry point 0x${startAddress.toString(16)} for program '${programName}'`);
             }
 
-            // Set CPU program counter
+            // Validate and set CPU program counter
+            if (startAddress % 4 !== 0) {
+                throw new Error(`Invalid entry point 0x${startAddress.toString(16)} - must be word-aligned (divisible by 4)`);
+            }
+
+            console.log(`DEBUG: Setting PC to 0x${startAddress.toString(16)} (word-aligned: ${startAddress % 4 === 0})`);
             this.cpu.setProgramCounter(startAddress);
 
             // Set up stack if not already done
@@ -319,10 +328,15 @@ class OperatingSystemKernel {
      */
     handleSystemCall(systemCallNumber) {
         try {
+            console.log(`DEBUG: System call ${systemCallNumber} at PC 0x${this.cpu.getProgramCounter().toString(16)}`);
+            console.log(`DEBUG: System call handler called with syscall number: ${systemCallNumber}`);
+            console.log(`DEBUG: Available system calls - PRINT_CHAR: ${this.SYSTEM_CALLS.PRINT_CHAR}, READ_CHAR: ${this.SYSTEM_CALLS.READ_CHAR}, EXIT: ${this.SYSTEM_CALLS.EXIT}`);
+
             switch (systemCallNumber) {
                 case this.SYSTEM_CALLS.PRINT_CHAR:
                     // Print character from R0 to console
                     const charCode = this.cpu.getRegister(0) & 0xFF;
+                    console.log(`DEBUG: PRINT_CHAR - charCode: 0x${charCode.toString(16)} (${String.fromCharCode(charCode)})`);
                     if (charCode > 0 && charCode <= 255) {
                         process.stdout.write(String.fromCharCode(charCode));
                     }

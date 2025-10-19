@@ -207,11 +207,11 @@ class MemoryDemo {
         // Step 1: Initialize data in registers
         instructions.push(...this.printMessage("Step 1: Initializing data in registers\r\n"));
 
-        // Load test values into registers
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x42))); // LOAD R1, [R0 + 0x42] (66 decimal)
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x17))); // LOAD R2, [R0 + 0x17] (23 decimal)
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 3, 0, 0, 0x89))); // LOAD R3, [R0 + 0x89] (137 decimal)
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 4, 0, 0, 0x2A))); // LOAD R4, [R0 + 0x2A] (42 decimal)
+        // Load test values into registers (using word-aligned addresses)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x40))); // LOAD R1, [R0 + 0x40] (64 decimal)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x18))); // LOAD R2, [R0 + 0x18] (24 decimal)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 3, 0, 0, 0x88))); // LOAD R3, [R0 + 0x88] (136 decimal)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 4, 0, 0, 0x28))); // LOAD R4, [R0 + 0x28] (40 decimal)
 
         // Step 2: Store data to memory locations
         instructions.push(...this.printMessage("Step 2: Storing data to memory locations\r\n"));
@@ -240,7 +240,7 @@ class MemoryDemo {
 
             // For demo purposes, we'll print the expected values since we can't easily
             // read back register values in this format
-            const expectedValues = [0x42, 0x17, 0x89, 0x2A];
+            const expectedValues = [0x40, 0x18, 0x88, 0x28];
             instructions.push(...this.printHexByte(expectedValues[i]));
             instructions.push(...this.printMessage(" ("));
             instructions.push(...this.printNumber(expectedValues[i]));

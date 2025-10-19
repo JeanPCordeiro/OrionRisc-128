@@ -3,10 +3,15 @@
  * Comprehensive test reporting and diagnostics for the complete system
  */
 
+console.log('DEBUG: Starting test-runner.js');
 const SystemBootstrapTest = require('./system-bootstrap-test');
+console.log('DEBUG: SystemBootstrapTest loaded');
 const ProgramExecutionTest = require('./program-execution-test');
+console.log('DEBUG: ProgramExecutionTest loaded');
 const EndToEndTest = require('./end-to-end-test');
+console.log('DEBUG: EndToEndTest loaded');
 const PerformanceTest = require('./performance-test');
+console.log('DEBUG: PerformanceTest loaded');
 
 class IntegrationTestRunner {
     constructor() {

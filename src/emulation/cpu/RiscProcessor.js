@@ -14,9 +14,12 @@ class RiscProcessor {
 
         // Initialize 16 general-purpose registers (R0-R15)
         this.registers = new Array(16).fill(0);
+        console.log(`DEBUG: CPU constructor - Registers initialized`);
 
         // Program Counter - points to current instruction address
         this.programCounter = 0x0000;
+        console.log(`DEBUG: CPU constructor - Initial PC set to 0x${this.programCounter.toString(16)}`);
+        console.log(`DEBUG: CPU constructor - PC value check: ${this.programCounter}, type: ${typeof this.programCounter}`);
 
         // CPU state flags
         this.isRunning = false;
@@ -48,6 +51,7 @@ class RiscProcessor {
 
         // Reset program counter
         this.programCounter = 0x0000;
+        console.log(`DEBUG: CPU reset - PC set to 0x${this.programCounter.toString(16)}`);
 
         // Reset CPU state
         this.isRunning = false;
@@ -139,7 +143,9 @@ class RiscProcessor {
                     this.validateRegisterIndex(reg1);
                     this.validateRegisterIndex(reg2);
                     const loadAddress = (this.registers[reg2] + immediate) & 0xFFFF;
+                    console.log(`DEBUG: LOAD R${reg1} = [R${reg2} + 0x${immediate.toString(16)}] = [0x${loadAddress.toString(16)}]`);
                     this.registers[reg1] = this.mmu.readWord(loadAddress);
+                    console.log(`DEBUG: Loaded value 0x${this.registers[reg1].toString(16)} into R${reg1}`);
                     break;
 
                 case this.INSTRUCTIONS.STORE:
@@ -147,6 +153,7 @@ class RiscProcessor {
                     this.validateRegisterIndex(reg1);
                     this.validateRegisterIndex(reg2);
                     const storeAddress = (this.registers[reg2] + immediate) & 0xFFFF;
+                    console.log(`DEBUG: STORE R${reg1} (0x${this.registers[reg1].toString(16)}) -> [R${reg2} + 0x${immediate.toString(16)}] = [0x${storeAddress.toString(16)}]`);
                     this.mmu.writeWord(storeAddress, this.registers[reg1]);
                     break;
 
@@ -168,10 +175,17 @@ class RiscProcessor {
                     // SYSCALL - Trigger system call interrupt
                     // System call number should be in R0
                     // The OS will handle the interrupt and execute the system call
-                    // For now, we'll simulate this by calling a callback if provided
+                    console.log(`DEBUG: SYSCALL instruction executed at PC 0x${this.programCounter.toString(16)}`);
+                    console.log(`DEBUG: R0 contains syscall number: 0x${this.registers[0].toString(16)} (${this.registers[0] & 0xFF})`);
+                    console.log(`DEBUG: System call handler is ${this.systemCallHandler ? 'registered' : 'NOT registered'}`);
+
                     if (this.systemCallHandler) {
                         const syscallNumber = this.registers[0] & 0xFF;
+                        console.log(`DEBUG: Calling system call handler with number: ${syscallNumber}`);
                         this.systemCallHandler(syscallNumber);
+                        console.log(`DEBUG: System call handler returned`);
+                    } else {
+                        console.error(`ERROR: SYSCALL instruction executed but no system call handler is registered!`);
                     }
                     break;
 
@@ -209,12 +223,26 @@ class RiscProcessor {
             // Fetch instruction from memory
             const instruction = this.mmu.readWord(this.programCounter);
 
+            // DEBUG: Log PC and instruction for corruption tracking
+            console.log(`DEBUG: PC=0x${this.programCounter.toString(16)}, Instruction=0x${instruction.toString(16)}`);
+
+            // Check for suspicious instruction values that might indicate corruption
+            if (instruction === 0x41) {
+                console.error(`CRITICAL: PC corruption detected! PC=0x${this.programCounter.toString(16)} contains 0x41 (ASCII 'A')`);
+                console.error(`This suggests character data 'A' is being interpreted as an instruction`);
+                this.isHalted = true;
+                this.isRunning = false;
+                return false;
+            }
+
             // Execute instruction
             const shouldContinue = this.execute(instruction);
 
             // Advance program counter (next instruction is 4 bytes ahead)
             if (shouldContinue && !this.isHalted) {
-                this.programCounter = (this.programCounter + 4) & 0xFFFF;
+                const newPC = (this.programCounter + 4) & 0xFFFF;
+                console.log(`DEBUG: Advancing PC from 0x${this.programCounter.toString(16)} to 0x${newPC.toString(16)}`);
+                this.programCounter = newPC;
             }
 
             return shouldContinue;
@@ -333,12 +361,16 @@ class RiscProcessor {
                 throw new Error(`Invalid instruction at index ${i}: ${instruction}`);
             }
 
-            // Split 32-bit instruction into 4 bytes (big-endian for CPU)
+            console.log(`DEBUG: Loading instruction ${i}: 0x${instruction.toString(16)}`);
+
+            // Split 32-bit instruction into 4 bytes (big-endian format to match demo programs)
             byteData.push((instruction >> 24) & 0xFF); // Byte 3 (MSB) - opcode
             byteData.push((instruction >> 16) & 0xFF); // Byte 2 - reg1, reg2
             byteData.push((instruction >> 8) & 0xFF);  // Byte 1 - immediate high
             byteData.push(instruction & 0xFF);         // Byte 0 (LSB) - immediate low
         }
+
+        console.log(`DEBUG: Generated ${byteData.length} bytes: [${byteData.map(b => `0x${b.toString(16)}`).join(', ')}]`);
 
         // Load program into memory
         this.mmu.loadMemory(startAddress, byteData);

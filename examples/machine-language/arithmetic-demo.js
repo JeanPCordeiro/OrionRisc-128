@@ -144,11 +144,11 @@ class ArithmeticDemo {
         // Initialize values for arithmetic operations
         // We'll use R1 and R2 for input values, R3 for results
 
-        // Load 25 into R1 (using immediate value in memory)
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 25))); // LOAD R1, [R0 + 25]
+        // Load 25 into R1 (using immediate value in memory at word-aligned address)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 1, 0, 0, 0x20))); // LOAD R1, [R0 + 0x20]
 
-        // Load 17 into R2 (using immediate value in memory)
-        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 17))); // LOAD R2, [R0 + 17]
+        // Load 17 into R2 (using immediate value in memory at word-aligned address)
+        instructions.push(...this.instructionToBytes(this.createInstruction(0x01, 2, 0, 0, 0x18))); // LOAD R2, [R0 + 0x18]
 
         // Print first number message
         instructions.push(...this.printMessage("First number: "));

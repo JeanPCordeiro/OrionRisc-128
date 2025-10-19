@@ -1,0 +1,64 @@
+{
+  "startTime": "2025-10-19T12:17:27.806Z",
+  "endTime": "2025-10-19T12:17:28.086Z",
+  "testSuites": [
+    {
+      "name": "System Bootstrap",
+      "results": {
+        "systemInitialization": false,
+        "hardwareIntegration": true,
+        "memoryLayout": true,
+        "interruptSystem": true,
+        "ioSystem": false,
+        "overallSuccess": false
+      },
+      "success": false,
+      "startTime": "2025-10-19T12:17:27.991Z"
+    },
+    {
+      "name": "Program Execution",
+      "results": {
+        "arithmeticDemo": false,
+        "memoryDemo": false,
+        "ioDemo": false,
+        "calculatorDemo": false,
+        "overallSuccess": false,
+        "programLoading": true
+      },
+      "success": false,
+      "startTime": "2025-10-19T12:17:28.037Z"
+    },
+    {
+      "name": "End-to-End Workflow",
+      "results": {
+        "completeWorkflow": true,
+        "errorRecovery": false,
+        "systemCalls": true,
+        "memoryManagement": true,
+        "programChaining": false,
+        "overallSuccess": false,
+        "resourceCleanup": true
+      },
+      "success": false,
+      "startTime": "2025-10-19T12:17:28.074Z"
+    },
+    {
+      "name": "Performance Validation",
+      "results": {
+        "emulationSpeed": false,
+        "instructionTiming": false,
+        "memoryPerformance": true,
+        "systemCallLatency": true,
+        "overallPerformance": false
+      },
+      "startTime": "2025-10-19T12:17:28.086Z"
+    }
+  ],
+  "summary": {
+    "totalTests": 4,
+    "passedTests": 0,
+    "failedTests": 4,
+    "successRate": 0,
+    "totalDuration": 280
+  }
+}

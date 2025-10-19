@@ -4,16 +4,22 @@
  */
 class MemoryManagementUnit {
     constructor() {
+        console.log('DEBUG: MMU constructor called');
         // Initialize 128KB RAM (0x0000-0xFFFF)
         this.RAM_SIZE = 0x10000; // 65536 bytes
         this.MEMORY_MAPPED_IO_START = 0xF000; // Memory-mapped I/O region
         this.MEMORY_MAPPED_IO_SIZE = 0x1000;  // 4KB for I/O
 
+        console.log('DEBUG: MMU constants set');
         // Create memory as Uint8Array for efficient byte operations
         this.memory = new Uint8Array(this.RAM_SIZE);
+        // Create DataView for proper endianness handling
+        this.dataView = new DataView(this.memory.buffer);
+        console.log('DEBUG: MMU memory array created');
 
         // Initialize memory to zero
         this.clearMemory();
+        console.log('DEBUG: MMU memory cleared');
 
         console.log(`MMU initialized: ${this.RAM_SIZE} bytes RAM (${this.RAM_SIZE / 1024}KB)`);
     }
@@ -76,34 +82,43 @@ class MemoryManagementUnit {
             throw new Error(`Value out of range: ${value}. Valid range: 0-255`);
         }
 
+        // DEBUG: Track potential character data being written to instruction areas
+        if (address < 0x1000 && (value >= 0x41 && value <= 0x5A)) { // ASCII letters in first 4KB (program area)
+            console.error(`WARNING: Writing character '${String.fromCharCode(value)}' (0x${value.toString(16)}) to instruction memory at 0x${address.toString(16)}`);
+            console.error(`This could cause PC corruption if this location is later executed as code!`);
+        }
+
         this.memory[address] = value;
     }
 
     /**
-     * Read a 32-bit word from memory (little-endian)
-     * @param {number} address - Memory address (must be word-aligned)
-     * @returns {number} 32-bit word value
-     */
-    readWord(address) {
-        this.validateAddress(address);
+      * Read a 32-bit word from memory (BIG ENDIAN byte order)
+      * @param {number} address - Memory address (must be word-aligned)
+      * @returns {number} 32-bit word value
+      */
+     readWord(address) {
+         this.validateAddress(address);
 
-        // Check word alignment
-        if (address % 4 !== 0) {
-            throw new Error(`Unaligned word access at address 0x${address.toString(16)}. Address must be divisible by 4.`);
-        }
+         // Check word alignment
+         if (address % 4 !== 0) {
+             throw new Error(`Unaligned word access at address 0x${address.toString(16)}. Address must be divisible by 4.`);
+         }
 
-        // Read 4 bytes and combine into 32-bit word (little-endian)
-        const byte0 = this.memory[address];
-        const byte1 = this.memory[address + 1];
-        const byte2 = this.memory[address + 2];
-        const byte3 = this.memory[address + 3];
+         // Use DataView for proper big-endian reading
+         const word = this.dataView.getUint32(address, false); // false = big-endian
 
-        // Use arithmetic operations to avoid JavaScript bitwise operator limitations
-        return (byte3 * 0x1000000) + (byte2 * 0x10000) + (byte1 * 0x100) + byte0;
-    }
+         // DEBUG: Log the bytes being read
+         const byte0 = this.memory[address];
+         const byte1 = this.memory[address + 1];
+         const byte2 = this.memory[address + 2];
+         const byte3 = this.memory[address + 3];
+         console.log(`DEBUG: Reading word at 0x${address.toString(16)}: bytes [${byte0.toString(16)}, ${byte1.toString(16)}, ${byte2.toString(16)}, ${byte3.toString(16)}] -> 0x${word.toString(16)}`);
+
+         return word;
+     }
 
     /**
-     * Write a 32-bit word to memory (little-endian)
+     * Write a 32-bit word to memory (BIG ENDIAN byte order)
      * @param {number} address - Memory address (must be word-aligned)
      * @param {number} value - 32-bit word value to write
      */
@@ -124,17 +139,15 @@ class MemoryManagementUnit {
             throw new Error(`Value out of range: ${value}. Valid range: 0-0xFFFFFFFF`);
         }
 
-        // Split 32-bit word into 4 bytes (little-endian)
-        const byte0 = (value >> 0) & 0xFF;
-        const byte1 = (value >> 8) & 0xFF;
-        const byte2 = (value >> 16) & 0xFF;
-        const byte3 = (value >> 24) & 0xFF;
+        // Use DataView for proper big-endian writing
+        this.dataView.setUint32(address, value, false); // false = big-endian
 
-        // Write bytes to memory
-        this.memory[address] = byte0;
-        this.memory[address + 1] = byte1;
-        this.memory[address + 2] = byte2;
-        this.memory[address + 3] = byte3;
+        // DEBUG: Check if this looks like character data being written as a word
+        const byte0 = this.memory[address];
+        if (address < 0x1000 && byte0 === 0x41) {
+            console.error(`WARNING: Writing byte 'A' (0x41) as MSB to instruction memory at 0x${address.toString(16)}`);
+            console.error(`This could cause PC corruption if this location is later executed as code!`);
+        }
     }
 
     /**
