@@ -140,29 +140,53 @@ class GraphicsDisplay {
      * Set up WebSocket handlers for graphics communication
      */
     setupWebSocketHandlers() {
-        if (window.EmulationWebSocket) {
-            window.EmulationWebSocket.addMessageHandler('gpu_pixel', (data) => {
+        if (window.OrionRiscApp && window.OrionRiscApp.components.websocket) {
+            const ws = window.OrionRiscApp.components.websocket;
+
+            ws.addMessageHandler('gpu_pixel', (data) => {
                 this.setPixel(data.x, data.y, data.color);
             });
 
-            window.EmulationWebSocket.addMessageHandler('gpu_character', (data) => {
+            ws.addMessageHandler('gpu_character', (data) => {
                 this.drawCharacter(data.x, data.y, data.char, data.foreground, data.background);
             });
 
-            window.EmulationWebSocket.addMessageHandler('gpu_clear', (data) => {
+            ws.addMessageHandler('gpu_clear', (data) => {
                 this.clearScreen(data.color || 0);
             });
 
-            window.EmulationWebSocket.addMessageHandler('gpu_text_mode', (data) => {
+            ws.addMessageHandler('gpu_text_mode', (data) => {
                 this.setTextMode(data.enabled);
             });
 
-            window.EmulationWebSocket.addMessageHandler('gpu_cursor', (data) => {
+            ws.addMessageHandler('gpu_cursor', (data) => {
                 this.setCursor(data.x, data.y, data.visible);
             });
 
-            window.EmulationWebSocket.addMessageHandler('gpu_frame', (data) => {
+            ws.addMessageHandler('gpu_frame', (data) => {
                 this.updateFrameBuffer(data.frameBuffer);
+            });
+        }
+    }
+
+    /**
+     * Get WebSocket instance
+     */
+    getWebSocket() {
+        return window.OrionRiscApp && window.OrionRiscApp.components.websocket;
+    }
+
+    /**
+     * Handle WebSocket connection establishment
+     */
+    onConnected() {
+        console.log('Graphics display connected to server');
+        // Request initial graphics state or perform any connection-time initialization
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            // Request current graphics state from server
+            ws.send({
+                type: 'gpu_request_state'
             });
         }
     }

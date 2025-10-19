@@ -62,25 +62,49 @@ class FileBrowser {
      * Set up WebSocket handlers for disk communication
      */
     setupWebSocketHandlers() {
-        if (window.EmulationWebSocket) {
-            window.EmulationWebSocket.addMessageHandler('disk_mounted', (data) => {
+        if (window.OrionRiscApp && window.OrionRiscApp.components.websocket) {
+            const ws = window.OrionRiscApp.components.websocket;
+
+            ws.addMessageHandler('disk_mounted', (data) => {
                 this.handleDiskMounted(data.drive, data.imageName, data.files);
             });
 
-            window.EmulationWebSocket.addMessageHandler('disk_ejected', (data) => {
+            ws.addMessageHandler('disk_ejected', (data) => {
                 this.handleDiskEjected(data.drive);
             });
 
-            window.EmulationWebSocket.addMessageHandler('disk_files', (data) => {
+            ws.addMessageHandler('disk_files', (data) => {
                 this.updateDiskFiles(data.drive, data.files);
             });
 
-            window.EmulationWebSocket.addMessageHandler('file_loaded', (data) => {
+            ws.addMessageHandler('file_loaded', (data) => {
                 this.handleFileLoaded(data.filename, data.success);
             });
 
-            window.EmulationWebSocket.addMessageHandler('file_saved', (data) => {
+            ws.addMessageHandler('file_saved', (data) => {
                 this.handleFileSaved(data.filename, data.success);
+            });
+        }
+    }
+
+    /**
+     * Get WebSocket instance
+     */
+    getWebSocket() {
+        return window.OrionRiscApp && window.OrionRiscApp.components.websocket;
+    }
+
+    /**
+     * Handle WebSocket connection establishment
+     */
+    onConnected() {
+        console.log('File browser connected to server');
+        // Request initial disk state or perform any connection-time initialization
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            // Request current disk state from server
+            ws.send({
+                type: 'disk_request_state'
             });
         }
     }
@@ -110,8 +134,9 @@ class FileBrowser {
         reader.onload = (e) => {
             const data = e.target.result;
 
-            if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-                window.EmulationWebSocket.send({
+            const ws = this.getWebSocket();
+            if (ws && ws.isConnected) {
+                ws.send({
                     type: 'mount_disk',
                     drive: drive,
                     filename: file.name,
@@ -190,8 +215,8 @@ class FileBrowser {
         this.refreshDiskDisplays();
 
         // Update control panel indicators
-        if (window.ControlPanel) {
-            window.ControlPanel.updateDiskStatus({
+        if (window.OrionRiscApp && window.OrionRiscApp.components.controls) {
+            window.OrionRiscApp.components.controls.updateDiskStatus({
                 [`disk${drive}`]: true
             });
         }
@@ -219,8 +244,8 @@ class FileBrowser {
         this.refreshDiskDisplays();
 
         // Update control panel indicators
-        if (window.ControlPanel) {
-            window.ControlPanel.updateDiskStatus({
+        if (window.OrionRiscApp && window.OrionRiscApp.components.controls) {
+            window.OrionRiscApp.components.controls.updateDiskStatus({
                 [`disk${drive}`]: false
             });
         }
@@ -310,8 +335,9 @@ class FileBrowser {
      * Load selected file
      */
     loadFile(drive, file) {
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'load_file',
                 drive: drive,
                 filename: file.name
@@ -326,8 +352,9 @@ class FileBrowser {
      * Save file to disk
      */
     saveFile(drive, filename, data) {
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'save_file',
                 drive: drive,
                 filename: filename,
@@ -414,10 +441,10 @@ class FileBrowser {
         }
 
         // Send to terminal
-        if (window.TerminalEmulator) {
-            window.TerminalEmulator.writeOutput(`\nLoaded: ${file.name}\n`);
-            window.TerminalEmulator.writeOutput(content);
-            window.TerminalEmulator.writeOutput('\n> ');
+        if (window.OrionRiscApp && window.OrionRiscApp.components.terminal) {
+            window.OrionRiscApp.components.terminal.writeOutput(`\nLoaded: ${file.name}\n`);
+            window.OrionRiscApp.components.terminal.writeOutput(content);
+            window.OrionRiscApp.components.terminal.writeOutput('\n> ');
         }
 
         this.showMessage(`Loaded "${file.name}" (${this.formatFileSize(file.size)})`);
@@ -459,8 +486,8 @@ class FileBrowser {
     showMessage(message, type = 'info') {
         const color = type === 'error' ? '#ff4444' : '#00ff88';
 
-        if (window.TerminalEmulator) {
-            window.TerminalEmulator.writeOutput(`[${type.toUpperCase()}] ${message}\n`);
+        if (window.OrionRiscApp && window.OrionRiscApp.components.terminal) {
+            window.OrionRiscApp.components.terminal.writeOutput(`[${type.toUpperCase()}] ${message}\n`);
         } else {
             // Fallback message display
             console.log(`FileBrowser: ${message}`);

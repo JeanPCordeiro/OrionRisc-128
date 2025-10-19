@@ -53,8 +53,14 @@ class OrionRiscFrontend {
         console.log('Initializing WebSocket communication...');
         this.components.websocket = new EmulationWebSocket();
 
-        // Wait a bit for WebSocket to establish connection
-        await this.waitForConnection();
+        // Set up event listener for when WebSocket connection is established
+        await new Promise((resolve) => {
+            const handleConnectionEstablished = () => {
+                this.components.websocket.removeEventListener('connectionEstablished', handleConnectionEstablished);
+                resolve();
+            };
+            this.components.websocket.addEventListener('connectionEstablished', handleConnectionEstablished);
+        });
 
         // 2. Graphics display
         console.log('Initializing graphics display...');
@@ -72,28 +78,16 @@ class OrionRiscFrontend {
         console.log('Initializing file browser...');
         this.components.filebrowser = new FileBrowser();
 
+        // Set up WebSocket handlers for all components now that WebSocket is ready
+        console.log('Setting up WebSocket handlers...');
+        this.components.graphics.setupWebSocketHandlers();
+        this.components.terminal.setupWebSocketHandlers();
+        this.components.controls.setupWebSocketHandlers();
+        this.components.filebrowser.setupWebSocketHandlers();
+
         console.log('All components initialized');
     }
 
-    /**
-     * Wait for WebSocket connection to be established
-     */
-    async waitForConnection(timeout = 5000) {
-        const startTime = Date.now();
-
-        return new Promise((resolve, reject) => {
-            const checkConnection = () => {
-                if (this.components.websocket.isConnected) {
-                    resolve();
-                } else if (Date.now() - startTime > timeout) {
-                    reject(new Error('Connection timeout'));
-                } else {
-                    setTimeout(checkConnection, 100);
-                }
-            };
-            checkConnection();
-        });
-    }
 
     /**
      * Set up global error handling

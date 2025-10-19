@@ -48,9 +48,6 @@ class FloppyDiskController {
             CONTROL: 0x09       // Control register
         };
 
-        // Initialize register values
-        this.reset();
-
         // Command execution state
         this.currentCommand = null;
         this.commandPhase = 0;
@@ -87,6 +84,9 @@ class FloppyDiskController {
             DRIVE_READY: 0x40,    // Drive ready
             DRIVE_FAULT: 0x80     // Drive fault
         };
+
+        // Initialize register values (now that STATUS is defined)
+        this.reset();
     }
 
     /**

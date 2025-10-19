@@ -83,25 +83,49 @@ class ControlPanel {
      * Set up WebSocket handlers for system communication
      */
     setupWebSocketHandlers() {
-        if (window.EmulationWebSocket) {
-            window.EmulationWebSocket.addMessageHandler('system_status', (data) => {
+        if (window.OrionRiscApp && window.OrionRiscApp.components.websocket) {
+            const ws = window.OrionRiscApp.components.websocket;
+
+            ws.addMessageHandler('system_status', (data) => {
                 this.updateSystemStatus(data);
             });
 
-            window.EmulationWebSocket.addMessageHandler('cpu_status', (data) => {
+            ws.addMessageHandler('cpu_status', (data) => {
                 this.updateCPUStatus(data);
             });
 
-            window.EmulationWebSocket.addMessageHandler('memory_status', (data) => {
+            ws.addMessageHandler('memory_status', (data) => {
                 this.updateMemoryStatus(data);
             });
 
-            window.EmulationWebSocket.addMessageHandler('disk_status', (data) => {
+            ws.addMessageHandler('disk_status', (data) => {
                 this.updateDiskStatus(data);
             });
 
-            window.EmulationWebSocket.addMessageHandler('debug_info', (data) => {
+            ws.addMessageHandler('debug_info', (data) => {
                 this.updateDebugInfo(data);
+            });
+        }
+    }
+
+    /**
+     * Get WebSocket instance
+     */
+    getWebSocket() {
+        return window.OrionRiscApp && window.OrionRiscApp.components.websocket;
+    }
+
+    /**
+     * Handle WebSocket connection establishment
+     */
+    onConnected() {
+        console.log('Control panel connected to server');
+        // Request initial system state or perform any connection-time initialization
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            // Request current system state from server
+            ws.send({
+                type: 'system_request_state'
             });
         }
     }
@@ -121,8 +145,9 @@ class ControlPanel {
     togglePower() {
         this.systemState.power = !this.systemState.power;
 
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'system_power',
                 state: this.systemState.power
             });
@@ -141,8 +166,9 @@ class ControlPanel {
      * Reset the system
      */
     resetSystem() {
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'system_reset'
             });
         } else {
@@ -161,8 +187,8 @@ class ControlPanel {
      * Load program from disk
      */
     loadProgram() {
-        if (window.FileBrowser) {
-            window.FileBrowser.loadProgram();
+        if (window.OrionRiscApp && window.OrionRiscApp.components.filebrowser) {
+            window.OrionRiscApp.components.filebrowser.loadProgram();
         } else {
             // Fallback file dialog
             this.showLoadDialog();
@@ -175,8 +201,8 @@ class ControlPanel {
      * Save program to disk
      */
     saveProgram() {
-        if (window.FileBrowser) {
-            window.FileBrowser.saveProgram();
+        if (window.OrionRiscApp && window.OrionRiscApp.components.filebrowser) {
+            window.OrionRiscApp.components.filebrowser.saveProgram();
         } else {
             // Fallback file dialog
             this.showSaveDialog();
@@ -381,8 +407,9 @@ class ControlPanel {
         reader.onload = (e) => {
             const data = e.target.result;
 
-            if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-                window.EmulationWebSocket.send({
+            const ws = this.getWebSocket();
+            if (ws && ws.isConnected) {
+                ws.send({
                     type: 'load_program',
                     filename: file.name,
                     data: data
@@ -415,8 +442,9 @@ class ControlPanel {
      * Request system status from backend
      */
     requestStatus() {
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'request_status'
             });
         }
@@ -429,8 +457,9 @@ class ControlPanel {
         this.systemState.running = false;
         this.systemState.power = false;
 
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'emergency_stop'
             });
         }
@@ -446,8 +475,9 @@ class ControlPanel {
         this.systemState.systemCalls = 0;
         this.systemState.lastInstruction = 'None';
 
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'reset_counters'
             });
         }
@@ -462,8 +492,10 @@ class ControlPanel {
         const snapshot = {
             timestamp: new Date().toISOString(),
             systemState: this.getState(),
-            terminalState: window.TerminalEmulator ? window.TerminalEmulator.getState() : null,
-            graphicsState: window.GraphicsDisplay ? window.GraphicsDisplay.getState() : null
+            terminalState: window.OrionRiscApp && window.OrionRiscApp.components.terminal ?
+                window.OrionRiscApp.components.terminal.getState() : null,
+            graphicsState: window.OrionRiscApp && window.OrionRiscApp.components.graphics ?
+                window.OrionRiscApp.components.graphics.getState() : null
         };
 
         console.log('System Snapshot:', snapshot);

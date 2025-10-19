@@ -41,21 +41,45 @@ class TerminalEmulator {
      * Set up WebSocket message handlers for terminal communication
      */
     setupWebSocketHandlers() {
-        if (window.EmulationWebSocket) {
-            window.EmulationWebSocket.addMessageHandler('terminal_output', (data) => {
+        if (window.OrionRiscApp && window.OrionRiscApp.components.websocket) {
+            const ws = window.OrionRiscApp.components.websocket;
+
+            ws.addMessageHandler('terminal_output', (data) => {
                 this.writeOutput(data.text);
             });
 
-            window.EmulationWebSocket.addMessageHandler('terminal_input_request', (data) => {
+            ws.addMessageHandler('terminal_input_request', (data) => {
                 this.requestInput(data.prompt || '');
             });
 
-            window.EmulationWebSocket.addMessageHandler('terminal_clear', () => {
+            ws.addMessageHandler('terminal_clear', () => {
                 this.clearScreen();
             });
 
-            window.EmulationWebSocket.addMessageHandler('terminal_set_cursor', (data) => {
+            ws.addMessageHandler('terminal_set_cursor', (data) => {
                 this.setCursorPosition(data.x, data.y);
+            });
+        }
+    }
+
+    /**
+     * Get WebSocket instance
+     */
+    getWebSocket() {
+        return window.OrionRiscApp && window.OrionRiscApp.components.websocket;
+    }
+
+    /**
+     * Handle WebSocket connection establishment
+     */
+    onConnected() {
+        console.log('Terminal emulator connected to server');
+        // Request initial terminal state or perform any connection-time initialization
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            // Request current terminal state from server
+            ws.send({
+                type: 'terminal_request_state'
             });
         }
     }
@@ -125,8 +149,9 @@ class TerminalEmulator {
         this.updateDisplay();
 
         // Send typing indicator to backend if connected
-        if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-            window.EmulationWebSocket.send({
+        const ws = this.getWebSocket();
+        if (ws && ws.isConnected) {
+            ws.send({
                 type: 'terminal_typing',
                 text: this.currentLine
             });
@@ -157,8 +182,9 @@ class TerminalEmulator {
             }
 
             // Send to backend
-            if (window.EmulationWebSocket && window.EmulationWebSocket.isConnected()) {
-                window.EmulationWebSocket.send({
+            const ws = this.getWebSocket();
+            if (ws && ws.isConnected) {
+                ws.send({
                     type: 'terminal_input',
                     text: command + '\n'
                 });

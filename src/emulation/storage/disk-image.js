@@ -32,8 +32,12 @@ class DiskImage {
      */
     async mountDisk(drive, imagePath) {
         try {
+            console.log(`DiskImage.mountDisk called with drive: "${drive}" (type: ${typeof drive})`);
+            console.log(`Valid drives check: ['A:', 'B:'].includes("${drive}") = ${['A:', 'B:'].includes(drive)}`);
+
             // Validate drive letter
             if (!['A:', 'B:'].includes(drive)) {
+                console.error(`Drive validation failed for: "${drive}"`);
                 throw new Error(`Invalid drive: ${drive}`);
             }
 
@@ -218,16 +222,23 @@ class DiskImage {
      */
     validateDiskFormat(diskBuffer) {
         try {
+            console.log(`Validating disk: ${diskBuffer.length} bytes`);
+
             // Check size
             if (diskBuffer.length !== this.DISK_SIZE_360KB &&
                 diskBuffer.length !== this.DISK_SIZE_720KB) {
+                console.log(`Invalid disk size: ${diskBuffer.length} bytes (expected ${this.DISK_SIZE_360KB} or ${this.DISK_SIZE_720KB})`);
                 return false;
             }
+
+            console.log(`Disk size validation passed: ${diskBuffer.length === this.DISK_SIZE_360KB ? '360KB' : '720KB'}`);
 
             // Basic structure validation - check for non-zero data in first sector
             // (boot sector should have some data)
             const firstSector = diskBuffer.slice(0, 512);
             const hasData = firstSector.some(byte => byte !== 0x00);
+
+            console.log(`Boot sector validation: ${hasData ? 'has data' : 'empty'}`);
 
             // Allow blank disks (all zeros) or disks with boot sector data
             return true;

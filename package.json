@@ -1,0 +1,38 @@
+{
+  "name": "orionrisc-128",
+  "version": "1.0.0",
+  "description": "Complete 1980s-style RISC computer system emulation with bootstrap development",
+  "main": "server.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "nodemon start.js",
+    "server": "node server.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "canvas": "^3.2.0",
+    "express": "^5.1.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "eslint": "^9.38.0",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  },
+  "keywords": [
+    "emulation",
+    "risc",
+    "computer",
+    "1980s",
+    "bootstrap",
+    "educational"
+  ],
+  "author": "OrionRisc-128 Project",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

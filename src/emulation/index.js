@@ -8,6 +8,7 @@
 const MemoryManagementUnit = require('./memory/MemoryManagementUnit');
 const RiscProcessor = require('./cpu/RiscProcessor');
 const { GraphicsProcessingUnit } = require('./gpu');
+const { FloppyDiskController } = require('./storage');
 
 class EmulationLayer {
     constructor() {
@@ -15,9 +16,13 @@ class EmulationLayer {
         this.mmu = new MemoryManagementUnit();
         this.cpu = new RiscProcessor(this.mmu);
         this.gpu = new GraphicsProcessingUnit();
+        this.fdc = new FloppyDiskController(this.mmu);
 
         // GPU memory-mapped I/O integration
         this.setupGPUMemoryMapping();
+
+        // FDC memory-mapped I/O integration
+        this.setupFDCMemoryMapping();
 
         // System state
         this.isRunning = false;
@@ -82,11 +87,40 @@ class EmulationLayer {
     }
 
     /**
+     * Set up FDC memory-mapped I/O integration with MMU
+     */
+    setupFDCMemoryMapping() {
+        const originalMMUReadByte = this.mmu.readByte.bind(this.mmu);
+        const originalMMUWriteByte = this.mmu.writeByte.bind(this.mmu);
+
+        // Override MMU methods to handle FDC memory-mapped I/O
+        this.mmu.readByte = (address) => {
+            // Check if this is a FDC register access (0xF800-0xF900)
+            if (address >= 0xF800 && address < 0xF900) {
+                return this.fdc.readByte(address);
+            }
+            return originalMMUReadByte(address);
+        };
+
+        this.mmu.writeByte = (address, value) => {
+            // Check if this is a FDC register access (0xF800-0xF900)
+            if (address >= 0xF800 && address < 0xF900) {
+                this.fdc.writeByte(address, value);
+                return;
+            }
+            return originalMMUWriteByte(address, value);
+        };
+
+        console.log('FDC memory-mapped I/O integrated with MMU');
+    }
+
+    /**
      * Reset all hardware components
      */
     reset() {
         this.cpu.reset();
         this.gpu.reset();
+        this.fdc.reset();
         this.cycleCount = 0;
         console.log('All hardware components reset');
     }
@@ -190,7 +224,8 @@ class EmulationLayer {
         return {
             cpu: this.cpu,
             mmu: this.mmu,
-            gpu: this.gpu
+            gpu: this.gpu,
+            fdc: this.fdc
         };
     }
 
@@ -211,6 +246,23 @@ class EmulationLayer {
     getTextModeEngine() { return this.gpu.getTextModeEngine(); }
     getGraphicsPrimitives() { return this.gpu.getGraphicsPrimitives(); }
     getCharacterROM() { return this.gpu.getCharacterROM(); }
+
+    /**
+     * FDC access methods (delegated to FDC)
+     */
+    async mountDisk(drive, imagePath) {
+        console.log(`EmulationLayer: Mounting disk ${imagePath} to drive ${drive}`);
+        return await this.fdc.mountDisk(drive, imagePath);
+    }
+    async unmountDisk(drive) { return await this.fdc.unmountDisk(drive); }
+    async createDisk(imagePath, is720KB) { return await this.fdc.createDisk(imagePath, is720KB); }
+    initializeFileSystem(drive) { return this.fdc.initializeFileSystem(drive); }
+    listFiles(drive) { return this.fdc.listFiles(drive); }
+    readFile(drive, filename, length) { return this.fdc.readFile(drive, filename, length); }
+    writeFile(drive, filename, data) { return this.fdc.writeFile(drive, filename, data); }
+    deleteFile(drive, filename) { return this.fdc.deleteFile(drive, filename); }
+    getDiskInfo(drive) { return this.fdc.getDiskInfo(drive); }
+    getMountedDrives() { return this.fdc.getMountedDrives(); }
 }
 
 module.exports = EmulationLayer;

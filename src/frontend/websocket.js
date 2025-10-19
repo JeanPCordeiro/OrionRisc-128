@@ -11,6 +11,7 @@ class EmulationWebSocket {
         this.isConnecting = false;
         this.messageHandlers = new Map();
         this.messageQueue = [];
+        this.eventHandlers = new Map();
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 1000; // Start with 1 second
@@ -195,6 +196,11 @@ class EmulationWebSocket {
 
         if (this.isConnected) {
             try {
+                // Handle binary data (ArrayBuffer) by converting to array
+                if (fullMessage.data.data && fullMessage.data.data instanceof ArrayBuffer) {
+                    fullMessage.data.data = Array.from(new Uint8Array(fullMessage.data.data));
+                }
+
                 this.ws.send(JSON.stringify(fullMessage));
             } catch (error) {
                 console.error('Failed to send WebSocket message:', error);
@@ -234,6 +240,44 @@ class EmulationWebSocket {
     }
 
     /**
+     * Add event handler for WebSocket events
+     */
+    addEventListener(event, handler) {
+        if (!this.eventHandlers.has(event)) {
+            this.eventHandlers.set(event, []);
+        }
+        this.eventHandlers.get(event).push(handler);
+    }
+
+    /**
+     * Remove event handler
+     */
+    removeEventListener(event, handler) {
+        if (this.eventHandlers.has(event)) {
+            const handlers = this.eventHandlers.get(event);
+            const index = handlers.indexOf(handler);
+            if (index >= 0) {
+                handlers.splice(index, 1);
+            }
+        }
+    }
+
+    /**
+     * Emit event to all registered handlers
+     */
+    emit(event, data = null) {
+        if (this.eventHandlers.has(event)) {
+            this.eventHandlers.get(event).forEach(handler => {
+                try {
+                    handler(data);
+                } catch (error) {
+                    console.error(`Error in event handler for ${event}:`, error);
+                }
+            });
+        }
+    }
+
+    /**
      * Send handshake message to server
      */
     sendHandshake() {
@@ -257,19 +301,8 @@ class EmulationWebSocket {
         // Request initial state from server
         this.send({ type: 'request_initial_state' });
 
-        // Notify components that connection is established
-        if (window.TerminalEmulator) {
-            window.TerminalEmulator.onConnected();
-        }
-        if (window.GraphicsDisplay) {
-            window.GraphicsDisplay.onConnected();
-        }
-        if (window.ControlPanel) {
-            window.ControlPanel.onConnected();
-        }
-        if (window.FileBrowser) {
-            window.FileBrowser.onConnected();
-        }
+        // Emit connection established event for main application to handle
+        this.emit('connectionEstablished');
     }
 
     /**
