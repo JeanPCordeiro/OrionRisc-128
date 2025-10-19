@@ -13,6 +13,10 @@ class OperatingSystemKernel {
         this.cpu = cpu;
         this.mmu = mmu;
 
+        // Initialize FDC for file system operations
+        const { FloppyDiskController } = require('../../emulation/storage');
+        this.fdc = new FloppyDiskController(mmu);
+
         // System state
         this.isInitialized = false;
         this.isRunning = false;
@@ -43,7 +47,12 @@ class OperatingSystemKernel {
             READ_CHAR: 0x02,            // Read character from console
             EXIT: 0x03,                 // Terminate program
             LOAD_PROGRAM: 0x04,         // Load another program
-            GET_TIME: 0x05              // Get system time
+            GET_TIME: 0x05,             // Get system time
+            MOUNT_DISK: 0x06,           // Mount floppy disk
+            LOAD_FILE: 0x07,            // Load file from disk
+            LIST_FILES: 0x08,           // List files on disk
+            CREATE_FILE: 0x09,          // Create file on disk
+            DELETE_FILE: 0x0A           // Delete file from disk
         };
 
         console.log('Operating System Kernel initialized');
@@ -76,6 +85,9 @@ class OperatingSystemKernel {
 
             // Initialize I/O system
             this.initializeIOSystem();
+
+            // Initialize FDC system
+            this.initializeFDCSystem();
 
             this.isInitialized = true;
             this.isRunning = true;
@@ -136,6 +148,46 @@ class OperatingSystemKernel {
         this.inputBuffer = '';
 
         console.log('I/O system initialized');
+    }
+
+    /**
+     * Initialize FDC system
+     */
+    initializeFDCSystem() {
+        // FDC is already initialized in constructor
+        console.log('FDC system initialized');
+    }
+
+    /**
+     * Load program from disk file
+     * @param {string} filename - Name of program file on disk
+     * @param {string} programName - Name identifier for the program
+     * @param {number} startAddress - Memory address to load program (optional)
+     * @returns {boolean} True if program loaded successfully
+     */
+    loadProgramFromDisk(filename, programName, startAddress = null) {
+        try {
+            if (!this.isInitialized) {
+                throw new Error('System not initialized. Call initialize() first.');
+            }
+
+            console.log(`Loading program '${programName}' from disk file '${filename}'`);
+
+            // Read program file from disk
+            const maxProgramSize = this.MEMORY_LAYOUT.PROGRAM_MAX - (startAddress || this.MEMORY_LAYOUT.PROGRAM_START);
+            const programData = this.fdc.readFile('A:', filename, maxProgramSize);
+
+            if (!programData || programData.length === 0) {
+                throw new Error(`Program file '${filename}' not found or empty`);
+            }
+
+            // Load program into memory using existing method
+            return this.loadProgram(programData, programName, startAddress);
+
+        } catch (error) {
+            console.error(`Failed to load program '${programName}' from disk:`, error.message);
+            return false;
+        }
     }
 
     /**
@@ -364,6 +416,157 @@ class OperatingSystemKernel {
                         return 0;
                     } catch (error) {
                         console.error('Error setting time register:', error.message);
+                        return -1;
+                    }
+
+                case this.SYSTEM_CALLS.MOUNT_DISK:
+                    // Mount floppy disk (R1 = drive 'A:' or 'B:', R2 = disk image path pointer)
+                    try {
+                        const driveLetter = this.cpu.getRegister(1);
+                        const pathPtr = this.cpu.getRegister(2);
+
+                        // Read disk path from memory (null-terminated string)
+                        let path = '';
+                        let address = pathPtr;
+                        while (address < 0x10000) {
+                            const byte = this.mmu.readByte(address);
+                            if (byte === 0) break;
+                            path += String.fromCharCode(byte);
+                            address++;
+                        }
+
+                        const drive = driveLetter === 0 ? 'A:' : 'B:';
+                        const mounted = this.fdc.mountDisk(drive, path);
+
+                        this.cpu.setRegister(0, mounted ? 1 : 0);
+                        return mounted ? 0 : -1;
+                    } catch (error) {
+                        console.error('Error mounting disk:', error.message);
+                        this.cpu.setRegister(0, 0);
+                        return -1;
+                    }
+
+                case this.SYSTEM_CALLS.LOAD_FILE:
+                    // Load file from disk (R1 = filename pointer, R2 = buffer address, R3 = max length)
+                    try {
+                        const filenamePtr = this.cpu.getRegister(1);
+                        const bufferAddr = this.cpu.getRegister(2);
+                        const maxLength = this.cpu.getRegister(3);
+
+                        // Read filename from memory
+                        let filename = '';
+                        let address = filenamePtr;
+                        while (address < 0x10000) {
+                            const byte = this.mmu.readByte(address);
+                            if (byte === 0) break;
+                            filename += String.fromCharCode(byte);
+                            address++;
+                        }
+
+                        // Read file from disk
+                        const fileData = this.fdc.readFile('A:', filename, maxLength);
+
+                        if (fileData && fileData.length > 0) {
+                            // Copy file data to memory buffer
+                            const dataToCopy = Math.min(fileData.length, maxLength);
+                            for (let i = 0; i < dataToCopy; i++) {
+                                this.mmu.writeByte(bufferAddr + i, fileData[i]);
+                            }
+
+                            this.cpu.setRegister(0, dataToCopy); // Return bytes read
+                            return 0;
+                        } else {
+                            this.cpu.setRegister(0, 0); // Return 0 bytes read
+                            return -1;
+                        }
+                    } catch (error) {
+                        console.error('Error loading file:', error.message);
+                        this.cpu.setRegister(0, 0);
+                        return -1;
+                    }
+
+                case this.SYSTEM_CALLS.LIST_FILES:
+                    // List files on disk (R1 = buffer address for file list)
+                    try {
+                        const bufferAddr = this.cpu.getRegister(1);
+
+                        // Get file list from FDC
+                        const files = this.fdc.listFiles('A:');
+
+                        // Format file list as string and write to memory
+                        let fileList = '';
+                        for (const file of files) {
+                            fileList += `${file.name.padEnd(12)} ${file.size.toString().padStart(8)}\n`;
+                        }
+
+                        // Copy to memory buffer
+                        for (let i = 0; i < Math.min(fileList.length, 512); i++) {
+                            this.mmu.writeByte(bufferAddr + i, fileList.charCodeAt(i));
+                        }
+
+                        this.cpu.setRegister(0, files.length); // Return file count
+                        return 0;
+                    } catch (error) {
+                        console.error('Error listing files:', error.message);
+                        this.cpu.setRegister(0, 0);
+                        return -1;
+                    }
+
+                case this.SYSTEM_CALLS.CREATE_FILE:
+                    // Create file on disk (R1 = filename pointer, R2 = data buffer, R3 = data length)
+                    try {
+                        const filenamePtr = this.cpu.getRegister(1);
+                        const dataPtr = this.cpu.getRegister(2);
+                        const dataLength = this.cpu.getRegister(3);
+
+                        // Read filename from memory
+                        let filename = '';
+                        let address = filenamePtr;
+                        while (address < 0x10000) {
+                            const byte = this.mmu.readByte(address);
+                            if (byte === 0) break;
+                            filename += String.fromCharCode(byte);
+                            address++;
+                        }
+
+                        // Read file data from memory
+                        const fileData = Buffer.alloc(dataLength);
+                        for (let i = 0; i < dataLength; i++) {
+                            fileData[i] = this.mmu.readByte(dataPtr + i);
+                        }
+
+                        const created = this.fdc.writeFile('A:', filename, fileData);
+
+                        this.cpu.setRegister(0, created ? 1 : 0);
+                        return created ? 0 : -1;
+                    } catch (error) {
+                        console.error('Error creating file:', error.message);
+                        this.cpu.setRegister(0, 0);
+                        return -1;
+                    }
+
+                case this.SYSTEM_CALLS.DELETE_FILE:
+                    // Delete file from disk (R1 = filename pointer)
+                    try {
+                        const filenamePtr = this.cpu.getRegister(1);
+
+                        // Read filename from memory
+                        let filename = '';
+                        let address = filenamePtr;
+                        while (address < 0x10000) {
+                            const byte = this.mmu.readByte(address);
+                            if (byte === 0) break;
+                            filename += String.fromCharCode(byte);
+                            address++;
+                        }
+
+                        const deleted = this.fdc.deleteFile('A:', filename);
+
+                        this.cpu.setRegister(0, deleted ? 1 : 0);
+                        return deleted ? 0 : -1;
+                    } catch (error) {
+                        console.error('Error deleting file:', error.message);
+                        this.cpu.setRegister(0, 0);
                         return -1;
                     }
 
