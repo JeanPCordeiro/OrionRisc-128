@@ -13,7 +13,10 @@
 
 const MemoryManagementUnit = require('../../emulation/memory/MemoryManagementUnit');
 const RiscProcessor = require('../../emulation/cpu/RiscProcessor');
-const CCompiler = require('./c-code-generator');
+const CLexicalAnalyzer = require('./c-lexical-analyzer');
+const CParser = require('./c-parser');
+const CSemanticAnalyzer = require('./c-semantic-analyzer');
+const cCodeGenModule = require('./c-code-generator');
 
 /**
  * Bootstrap Validation Test Cases
@@ -190,7 +193,7 @@ class CCompilerBootstrapTester {
     constructor() {
         this.mmu = new MemoryManagementUnit();
         this.cpu = new RiscProcessor(this.mmu);
-        this.compiler = new CCompiler(this.mmu, this.cpu);
+        this.codeGenerator = new cCodeGenModule.CCodeGenerator(this.mmu, this.cpu);
 
         // Test results
         this.testsRun = 0;
@@ -235,7 +238,10 @@ class CCompilerBootstrapTester {
      */
     runBootstrapTest(testCase) {
         try {
-            const result = this.compiler.compile(
+            // Use the CCompiler class which has the compile method
+            const cCodeGenModule = require('./c-code-generator');
+            const fullCompiler = new cCodeGenModule.CCompiler(this.mmu, this.cpu);
+            const result = fullCompiler.compile(
                 testCase.cCode.trim(),
                 0x1000, 0x2000, 0x3000, 0x4000,
                 0x5000, 0x6000, 0x7000, 0x8000
@@ -340,7 +346,9 @@ class CCompilerBootstrapTester {
         `;
 
         console.log('1. Testing compiler utility compilation:');
-        const result1 = this.compiler.compile(
+        const cCodeGenModule1 = require('./c-code-generator');
+        const fullCompiler1 = new cCodeGenModule1.CCompiler(this.mmu, this.cpu);
+        const result1 = fullCompiler1.compile(
             selfHostingTest1,
             0x1000, 0x2000, 0x3000, 0x4000,
             0x5000, 0x6000, 0x7000, 0x8000
@@ -378,7 +386,9 @@ class CCompilerBootstrapTester {
         `;
 
         console.log('2. Testing compiler component simulation:');
-        const result2 = this.compiler.compile(
+        const cCodeGenModule2 = require('./c-code-generator');
+        const fullCompiler2 = new cCodeGenModule2.CCompiler(this.mmu, this.cpu);
+        const result2 = fullCompiler2.compile(
             selfHostingTest2,
             0x1000, 0x2000, 0x3000, 0x4000,
             0x5000, 0x6000, 0x7000, 0x8000
@@ -459,7 +469,9 @@ class CCompilerBootstrapTester {
         enhancementStages.forEach((stage, index) => {
             console.log(`${index + 1}. ${stage.name}:`);
 
-            const result = this.compiler.compile(
+            const cCodeGenModule3 = require('./c-code-generator');
+            const fullCompiler = new cCodeGenModule3.CCompiler(this.mmu, this.cpu);
+            const result = fullCompiler.compile(
                 stage.cCode,
                 0x1000, 0x2000, 0x3000, 0x4000,
                 0x5000, 0x6000, 0x7000, 0x8000
@@ -574,7 +586,9 @@ class CCompilerBootstrapTester {
         systemDevelopmentTests.forEach((test, index) => {
             console.log(`${index + 1}. ${test.name}:`);
 
-            const result = this.compiler.compile(
+            const cCodeGenModule4 = require('./c-code-generator');
+            const fullCompiler = new cCodeGenModule4.CCompiler(this.mmu, this.cpu);
+            const result = fullCompiler.compile(
                 test.cCode,
                 0x1000, 0x2000, 0x3000, 0x4000,
                 0x5000, 0x6000, 0x7000, 0x8000
@@ -668,7 +682,9 @@ class CCompilerBootstrapTester {
             }
         `;
 
-        const result = this.compiler.compile(
+        const cCodeGenModule5 = require('./c-code-generator');
+        const fullCompiler = new cCodeGenModule5.CCompiler(this.mmu, this.cpu);
+        const result = fullCompiler.compile(
             currentPhaseTest,
             0x1000, 0x2000, 0x3000, 0x4000,
             0x5000, 0x6000, 0x7000, 0x8000

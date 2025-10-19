@@ -109,18 +109,18 @@ const C_PARSER_STATES = {
 // ============================================================================
 
 /**
- * C Parser Machine Language Program
- *
- * This program reads tokens from the lexical analyzer, parses C grammar,
- * and builds an abstract syntax tree (AST) for semantic analysis.
- *
- * Interface:
- * - R0: Token buffer address (input)
- * - R1: AST buffer address (output)
- * - R2: String table address (input)
- * - R3: Current token index (input/output)
- * - Returns: AST root node address (R0) or error code (negative)
- */
+  * C Parser Machine Language Program
+  *
+  * This program reads tokens from the lexical analyzer, parses C grammar,
+  * and builds an abstract syntax tree (AST) for semantic analysis.
+  *
+  * Interface:
+  * - R0: Token buffer address (input)
+  * - R1: AST buffer address (output)
+  * - R2: String table address (input)
+  * - R3: Current token index (input/output)
+  * - Returns: AST root node address (R0) or error code (negative)
+  */
 const C_PARSER_PROGRAM = [
     // ========================================================================
     // INITIALIZATION PHASE
@@ -160,58 +160,59 @@ const C_PARSER_PROGRAM = [
     // ========================================================================
 
     // main_loop:
-    // Get current token
-    0xF0000000, // JUMP get_current_token   ; Get current token
+    // Get current token and parse based on state
+    0x05000000, // SYSCALL 0                ; Get current token
+    0x03470008, // SUB R14, R7, 0x8         ; Check if END token (0x8)
+    0xF4000001, // JUMP_EQ end_of_tokens    ; If END token, finish parsing
+    0x03470009, // SUB R14, R7, 0x9         ; Check if ERROR token (0x9)
+    0xF4000001, // JUMP_EQ parsing_error    ; If ERROR token, handle error
 
-    // get_current_token:
-    // Calculate token address = token_buffer + (token_index * 4)
-    0x03440004, // SUB R14, R4, R3          ; R14 = token_index * 4
-    0x03140000, // ADD R14, R0, R14         ; R14 = token address
-    0x017E0000, // LOAD R7, [R14 + 0]       ; R7 = current token data
-
-    // Check for end of tokens
-    0x03770008, // SUB R14, R7, 0x8         ; Check if END token (0x8)
-    0xF4000000, // JUMP_EQ end_of_tokens    ; If END token, finish parsing
-
-    // Check for error token
-    0x03770009, // SUB R14, R7, 0x9         ; Check if ERROR token (0x9)
-    0xF4000000, // JUMP_EQ parsing_error    ; If ERROR token, handle error
-
-    // ========================================================================
-    // PARSER STATE MACHINE
-    // ========================================================================
-
-    // Check current parser state
-    0x03780000, // SUB R14, R8, 0x0         ; Check if START state
-    0xF4000000, // JUMP_EQ parse_program    ; Parse program
-
-    0x03780001, // SUB R14, R8, 0x1         ; Check if PARSING_DECLARATIONS
-    0xF4000000, // JUMP_EQ parse_declarations ; Parse declarations
-
-    0x03780002, // SUB R14, R8, 0x2         ; Check if PARSING_FUNCTION
-    0xF4000000, // JUMP_EQ parse_function   ; Parse function
-
-    0x03780003, // SUB R14, R8, 0x3         ; Check if PARSING_STATEMENTS
-    0xF4000000, // JUMP_EQ parse_statements ; Parse statements
-
-    0x03780004, // SUB R14, R8, 0x4         ; Check if PARSING_EXPRESSION
-    0xF4000000, // JUMP_EQ parse_expression ; Parse expression
-
-    0x03780005, // SUB R14, R8, 0x5         ; Check if PARSING_DECLARATION
-    0xF4000000, // JUMP_EQ parse_declaration ; Parse declaration
+    // State-based parsing dispatch
+    0x03480000, // SUB R14, R8, 0x0         ; Check if START state
+    0xF4000001, // JUMP_EQ parse_program    ; Parse program
+    0x03480001, // SUB R14, R8, 0x1         ; Check if PARSING_DECLARATIONS
+    0xF4000001, // JUMP_EQ parse_declarations ; Parse declarations
+    0x03480002, // SUB R14, R8, 0x2         ; Check if PARSING_FUNCTION
+    0xF4000001, // JUMP_EQ parse_function   ; Parse function
+    0x03480003, // SUB R14, R8, 0x3         ; Check if PARSING_STATEMENTS
+    0xF4000001, // JUMP_EQ parse_statements ; Parse statements
+    0x03480004, // SUB R14, R8, 0x4         ; Check if PARSING_EXPRESSION
+    0xF4000001, // JUMP_EQ parse_expression ; Parse expression
+    0x03480005, // SUB R14, R8, 0x5         ; Check if PARSING_DECLARATION
+    0xF4000001, // JUMP_EQ parse_declaration ; Parse declaration
 
     // ========================================================================
-    // TOKEN PROCESSING BASED ON TYPE
+    // PROGRAM PARSING
     // ========================================================================
 
     // parse_program:
     // Program -> (FunctionDefinition | Declaration)*
+    0x05010000, // SYSCALL 1                ; Create program root node
+    0x0466000F, // ADD R6, R0, R15          ; Save root node address
 
-    // Check for function definition (type identifier LPAREN)
-    0xF0000000, // JUMP check_function_definition
+    // program_loop:
+    0x05020000, // SYSCALL 2                ; Check if function definition
+    0x034F0001, // SUB R14, R15, 1          ; Check if function pattern
+    0xF4000001, // JUMP_EQ parse_function_def; If function, parse it
+    0x05030000, // SYSCALL 3                ; Check if declaration
+    0x034F0001, // SUB R14, R15, 1          ; Check if declaration pattern
+    0xF4000001, // JUMP_EQ parse_decl       ; If declaration, parse it
+    0xF0000002, // JUMP program_end         ; No more declarations
 
-    // Check for declaration (type identifier SEMICOLON)
-    0xF0000000, // JUMP check_declaration
+    // parse_function_def:
+    0x05040000, // SYSCALL 4                ; Parse function definition
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE program_error    ; If error, handle it
+    0xF0000001, // JUMP program_loop        ; Continue parsing
+
+    // parse_decl:
+    0x05050000, // SYSCALL 5                ; Parse declaration
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE program_error    ; If error, handle it
+    0xF0000001, // JUMP program_loop        ; Continue parsing
+
+    // program_end:
+    0xF0000001, // JUMP end_of_tokens       ; End parsing
 
     // ========================================================================
     // DECLARATION PARSING
@@ -222,6 +223,32 @@ const C_PARSER_PROGRAM = [
 
     // parse_declaration:
     // Declaration -> TypeSpecifier Identifier (LBRACKET Number RBRACKET)? SEMICOLON
+    0x05060000, // SYSCALL 6                ; Parse type specifier
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE decl_error       ; If error, handle it
+
+    0x05070000, // SYSCALL 7                ; Expect identifier
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE decl_error       ; If error, handle it
+
+    0x05080000, // SYSCALL 8                ; Check for array brackets
+    0x034F0001, // SUB R14, R15, 1          ; Check if LBRACKET follows
+    0xF4000001, // JUMP_EQ parse_array_decl ; If brackets, parse array
+
+    0x05090000, // SYSCALL 9                ; Expect semicolon
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE decl_error       ; If error, handle it
+
+    0x050A0000, // SYSCALL 10               ; Create variable declaration node
+    0xF0000002, // JUMP decl_success        ; Declaration complete
+
+    // parse_array_decl:
+    0x050B0000, // SYSCALL 11               ; Parse array size
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE decl_error       ; If error, handle it
+
+    0x050C0000, // SYSCALL 12               ; Create array declaration node
+    0xF0000001, // JUMP decl_success        ; Declaration complete
 
     // ========================================================================
     // FUNCTION PARSING
@@ -229,9 +256,32 @@ const C_PARSER_PROGRAM = [
 
     // parse_function:
     // FunctionDefinition -> TypeSpecifier Identifier LPAREN ParameterList RPAREN CompoundStatement
+    0x050D0000, // SYSCALL 13               ; Parse return type
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
 
-    // check_function_definition:
-    // Look ahead for function pattern: type identifier LPAREN
+    0x050E0000, // SYSCALL 14               ; Parse function name
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
+
+    0x050F0000, // SYSCALL 15               ; Expect LPAREN
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
+
+    0x05100000, // SYSCALL 16               ; Parse parameter list
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
+
+    0x05110000, // SYSCALL 17               ; Expect RPAREN
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
+
+    0x05120000, // SYSCALL 18               ; Parse function body
+    0x034C0000, // SUB R14, R12, 0          ; Check for errors
+    0xF5000001, // JUMP_NE func_error       ; If error, handle it
+
+    0x05130000, // SYSCALL 19               ; Create function definition node
+    0xF0000001, // JUMP func_success        ; Function complete
 
     // ========================================================================
     // STATEMENT PARSING
@@ -240,58 +290,114 @@ const C_PARSER_PROGRAM = [
     // parse_statements:
     // Statements -> Statement*
 
-    // Statement types:
-    // - ExpressionStatement
-    // - IfStatement
-    // - WhileStatement
-    // - ForStatement
-    // - ReturnStatement
-    // - CompoundStatement
+    // Statement parsing based on first token
+    0x05140000, // SYSCALL 20               ; Get current token type
+    0x034F0003, // SUB R14, R15, 0x3         ; Check if KEYWORD (if, while, for, return)
+    0xF4000001, // JUMP_EQ parse_keyword_stmt; If keyword, parse keyword statement
+
+    0x034F0007, // SUB R14, R15, 0x7         ; Check if LBRACE (compound statement)
+    0xF4000001, // JUMP_EQ parse_compound_stmt; If LBRACE, parse compound statement
+
+    0xF0000001, // JUMP parse_expr_stmt     ; Default: expression statement
+
+    // parse_keyword_stmt:
+    0x05150000, // SYSCALL 21               ; Get keyword subtype
+    0x034F0003, // SUB R14, R15, 0x3         ; Check if IF
+    0xF4000001, // JUMP_EQ parse_if          ; Parse if statement
+    0x034F0005, // SUB R14, R15, 0x5         ; Check if WHILE
+    0xF4000001, // JUMP_EQ parse_while       ; Parse while statement
+    0x034F0006, // SUB R14, R15, 0x6         ; Check if FOR
+    0xF4000001, // JUMP_EQ parse_for         ; Parse for statement
+    0x034F0007, // SUB R14, R15, 0x7         ; Check if RETURN
+    0xF4000001, // JUMP_EQ parse_return      ; Parse return statement
+
+    // parse_compound_stmt:
+    0x05160000, // SYSCALL 22               ; Parse compound statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
+
+    // parse_if:
+    0x05170000, // SYSCALL 23               ; Parse if statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
+
+    // parse_while:
+    0x05180000, // SYSCALL 24               ; Parse while statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
+
+    // parse_for:
+    0x05190000, // SYSCALL 25               ; Parse for statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
+
+    // parse_return:
+    0x051A0000, // SYSCALL 26               ; Parse return statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
+
+    // parse_expr_stmt:
+    0x051B0000, // SYSCALL 27               ; Parse expression statement
+    0xF0000001, // JUMP stmt_success        ; Statement complete
 
     // ========================================================================
     // EXPRESSION PARSING
     // ========================================================================
 
     // parse_expression:
-    // Expression parsing with precedence:
-    // Assignment (=, +=, -=)
-    // Logical OR (||)
-    // Logical AND (&&)
-    // Equality (==, !=)
-    // Relational (<, >, <=, >=)
-    // Additive (+, -)
-    // Multiplicative (*, /, %)
-    // Unary (!, -, &, *)
+    // Expression parsing with precedence handling
+    0x051C0000, // SYSCALL 28               ; Parse assignment expression
+    0xF0000001, // JUMP expr_success        ; Expression complete
 
     // ========================================================================
-    // AST NODE CREATION
-    // ========================================================================
-
-    // create_ast_node:
-    // Create new AST node in AST buffer
-    // Input: R8 = node type, R9 = left child, R10 = right child, R11 = value
-    // Output: R7 = node address
-
-    // ========================================================================
-    // TOKEN CONSUMPTION
+    // TOKEN CONSUMPTION AND UTILITIES
     // ========================================================================
 
     // consume_token:
-    // Move to next token
     0x04441001, // ADD R4, R4, 1            ; Increment token index
     0xF0000000, // JUMP main_loop          ; Continue parsing
+
+    // peek_next_token:
+    0x04441FFF, // ADD R4, R4, -1           ; Go back to current position
+    0xF0000001, // JUMP main_loop          ; Continue
 
     // ========================================================================
     // ERROR HANDLING
     // ========================================================================
 
     // parsing_error:
-    // Handle parsing errors
     0x08CC0001, // LOAD R12, 1              ; Set error code
     0xFF000000, // HALT                    ; Stop execution
 
+    // program_error:
+    0x08CC0002, // LOAD R12, 2              ; Program parsing error
+    0xFF000000, // HALT                    ; Stop execution
+
+    // decl_error:
+    0x08CC0003, // LOAD R12, 3              ; Declaration parsing error
+    0xFF000000, // HALT                    ; Stop execution
+
+    // func_error:
+    0x08CC0004, // LOAD R12, 4              ; Function parsing error
+    0xFF000000, // HALT                    ; Stop execution
+
+    // stmt_error:
+    0x08CC0005, // LOAD R12, 5              ; Statement parsing error
+    0xFF000000, // HALT                    ; Stop execution
+
+    // expr_error:
+    0x08CC0006, // LOAD R12, 6              ; Expression parsing error
+    0xFF000000, // HALT                    ; Stop execution
+
+    // Success labels (for flow control)
+    // decl_success:
+    0xF0000001, // JUMP consume_token       ; Continue parsing
+
+    // func_success:
+    0xF0000001, // JUMP consume_token       ; Continue parsing
+
+    // stmt_success:
+    0xF0000001, // JUMP consume_token       ; Continue parsing
+
+    // expr_success:
+    0xF0000001, // JUMP consume_token       ; Continue parsing
+
     // end_of_tokens:
-    // Finish parsing, return AST root
     0x00660000, // ADD R0, R6, R0           ; Return AST root address
     0xFF000000  // HALT                    ; End of program
 ];

@@ -30,13 +30,30 @@ class RiscProcessor {
 
         // Instruction set constants
         this.INSTRUCTIONS = {
-            NOP: 0x00,    // No operation
-            LOAD: 0x01,   // Load from memory to register
-            STORE: 0x02,  // Store register to memory
-            ADD: 0x03,    // Add two registers
-            SUB: 0x04,    // Subtract two registers
-            SYSCALL: 0x05, // System call
-            HALT: 0xFF    // Halt execution
+            NOP: 0x00,      // No operation
+            LOAD: 0x01,     // Load from memory to register
+            STORE: 0x02,    // Store register to memory
+            ADD: 0x03,      // Add two registers
+            SUB: 0x04,      // Subtract two registers
+            SYSCALL: 0x05,  // System call
+            HALT: 0xFF,     // Halt execution
+
+            // Additional instructions needed for C compiler
+            AND: 0x06,      // Bitwise AND
+            OR: 0x07,       // Bitwise OR
+            XOR: 0x08,      // Bitwise XOR
+            SHIFT_LEFT: 0x09,  // Shift left
+            SHIFT_RIGHT: 0x0A, // Shift right
+            JUMP: 0x0B,     // Unconditional jump
+            JUMP_EQ: 0x0C,  // Jump if equal
+            JUMP_NE: 0x0D,  // Jump if not equal
+            JUMP_LT: 0x0E,  // Jump if less than
+            JUMP_LE: 0x0F,  // Jump if less than or equal
+            JUMP_GT: 0x10,  // Jump if greater than
+            JUMP_GE: 0x11,  // Jump if greater than or equal
+            MUL: 0x12,      // Multiply
+            DIV: 0x13,      // Divide
+            MOD: 0x14       // Modulo
         };
 
         console.log('RISC Processor initialized with 16 registers');
@@ -195,6 +212,145 @@ class RiscProcessor {
                     this.isRunning = false;
                     console.log('CPU halted by HALT instruction');
                     return false;
+
+                case this.INSTRUCTIONS.AND:
+                    // AND reg1, reg2
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    this.registers[reg1] = (this.registers[reg1] & this.registers[reg2]) & 0xFFFFFFFF;
+                    break;
+
+                case this.INSTRUCTIONS.OR:
+                    // OR reg1, reg2
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    this.registers[reg1] = (this.registers[reg1] | this.registers[reg2]) & 0xFFFFFFFF;
+                    break;
+
+                case this.INSTRUCTIONS.XOR:
+                    // XOR reg1, reg2
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    this.registers[reg1] = (this.registers[reg1] ^ this.registers[reg2]) & 0xFFFFFFFF;
+                    break;
+
+                case this.INSTRUCTIONS.SHIFT_LEFT:
+                    // SHIFT_LEFT reg1, reg2 (shift reg1 left by reg2 bits)
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    const shiftAmount = this.registers[reg2] & 0x1F; // Use only lower 5 bits
+                    this.registers[reg1] = (this.registers[reg1] << shiftAmount) & 0xFFFFFFFF;
+                    break;
+
+                case this.INSTRUCTIONS.SHIFT_RIGHT:
+                    // SHIFT_RIGHT reg1, reg2 (shift reg1 right by reg2 bits)
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    const shiftAmountR = this.registers[reg2] & 0x1F; // Use only lower 5 bits
+                    this.registers[reg1] = this.registers[reg1] >>> shiftAmountR;
+                    break;
+
+                case this.INSTRUCTIONS.JUMP:
+                    // JUMP immediate (unconditional jump)
+                    const jumpAddress = immediate;
+                    this.validateAddress(jumpAddress);
+                    this.programCounter = jumpAddress;
+                    console.log(`DEBUG: JUMP to address 0x${jumpAddress.toString(16)}`);
+                    return true; // Don't advance PC
+
+                case this.INSTRUCTIONS.JUMP_EQ:
+                    // JUMP_EQ immediate (jump if equal - R1 == R2)
+                    if (this.registers[reg1] === this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_EQ (equal) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.JUMP_NE:
+                    // JUMP_NE immediate (jump if not equal - R1 != R2)
+                    if (this.registers[reg1] !== this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_NE (not equal) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.JUMP_LT:
+                    // JUMP_LT immediate (jump if less than - R1 < R2)
+                    if (this.registers[reg1] < this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_LT (less than) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.JUMP_LE:
+                    // JUMP_LE immediate (jump if less than or equal - R1 <= R2)
+                    if (this.registers[reg1] <= this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_LE (less than or equal) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.JUMP_GT:
+                    // JUMP_GT immediate (jump if greater than - R1 > R2)
+                    if (this.registers[reg1] > this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_GT (greater than) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.JUMP_GE:
+                    // JUMP_GE immediate (jump if greater than or equal - R1 >= R2)
+                    if (this.registers[reg1] >= this.registers[reg2]) {
+                        const jumpAddress = immediate;
+                        this.validateAddress(jumpAddress);
+                        this.programCounter = jumpAddress;
+                        console.log(`DEBUG: JUMP_GE (greater than or equal) to address 0x${jumpAddress.toString(16)}`);
+                        return true; // Don't advance PC
+                    }
+                    break;
+
+                case this.INSTRUCTIONS.MUL:
+                    // MUL reg1, reg2
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    const result = this.registers[reg1] * this.registers[reg2];
+                    this.registers[reg1] = result & 0xFFFFFFFF; // Keep lower 32 bits
+                    break;
+
+                case this.INSTRUCTIONS.DIV:
+                    // DIV reg1, reg2 (reg1 = reg1 / reg2)
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    if (this.registers[reg2] === 0) {
+                        throw new Error('Division by zero');
+                    }
+                    this.registers[reg1] = Math.floor(this.registers[reg1] / this.registers[reg2]);
+                    break;
+
+                case this.INSTRUCTIONS.MOD:
+                    // MOD reg1, reg2 (reg1 = reg1 % reg2)
+                    this.validateRegisterIndex(reg1);
+                    this.validateRegisterIndex(reg2);
+                    if (this.registers[reg2] === 0) {
+                        throw new Error('Modulo by zero');
+                    }
+                    this.registers[reg1] = ((this.registers[reg1] % this.registers[reg2]) + this.registers[reg2]) % this.registers[reg2]; // Handle negative numbers
+                    break;
 
                 default:
                     throw new Error(`Unknown instruction opcode: 0x${opcode.toString(16)}`);
