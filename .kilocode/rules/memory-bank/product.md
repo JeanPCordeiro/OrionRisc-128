@@ -2,80 +2,87 @@
 
 ## Why This Project Exists
 
-The OrionRisc-128 project exists to demonstrate the fundamental principles of computer system design by building a complete, self-hosted computer system from the ground up. In an era where complex abstractions hide the inner workings of computers, this project serves as both an educational tool and a testament to the beauty of simplicity in system design.
+OrionRisc-128 is an educational and hobbyist project that demonstrates the complete design and implementation of a vintage 1980s-style computer system from the ground up. It serves as a comprehensive learning platform for understanding:
+
+- **Low-level systems architecture** - How processors, memory, and I/O systems work together
+- **Compiler construction** - Building programming language tools from scratch
+- **Operating system design** - Creating system software that manages hardware resources
+- **Bootstrap development** - Building complex systems incrementally without external toolchains
+- **Computer history** - Recreating the experience of 1980s computing technology
 
 ## Problems It Solves
 
 ### Educational Gap
-Modern software development often occurs at high levels of abstraction, making it difficult for developers to understand the fundamental building blocks of computing systems. This project bridges that gap by providing a complete, working example of a computer system built from first principles.
+Most modern programmers never experience building systems from the hardware level up. This project bridges that gap by providing a hands-on platform to understand:
 
-### Understanding System Layers
-The project addresses the challenge of understanding how different system layers (hardware, assembler, compiler, OS, interpreter) work together to create a functional computing environment.
+- How RISC processors execute instructions
+- Memory management and addressing schemes
+- File system implementation on storage devices
+- Graphics rendering at the hardware level
+- Compiler pipeline construction
+- Operating system kernel development
 
-### Self-Hosting Complexity
-It demonstrates the bootstrapping problem in computer science - how to build a system using tools that don't yet exist - and provides a concrete solution through progressive development.
+### Accessibility
+Building real hardware systems requires expensive equipment and specialized knowledge. OrionRisc-128 provides:
+
+- **Zero-cost entry** - Runs in any modern web browser
+- **Safe experimentation** - No risk of damaging physical hardware
+- **Visual feedback** - See the computer in action through the authentic 80s interface
+- **Step-by-step progression** - Build complexity gradually with clear milestones
 
 ## How It Should Work
 
 ### System Architecture
-The OrionRisc-128 is a simulated 1980s-style microcomputer featuring:
+The OrionRisc-128 operates as a complete computer system with:
 
-- **RISC Processor**: A custom-designed reduced instruction set processor
-- **Memory**: 128KB RAM for program and data storage
-- **Graphics**: 640x200 monochrome display with 80x25 text mode
-- **Storage**: Two 360KB 3.5-inch floppy disk drives
-- **Operating System**: Basic OS providing program loading, storage, and execution
-- **Development Tools**: Assembler, C compiler, and BASIC interpreter
+1. **RISC Processor** - Custom 32-bit RISC CPU with 16 registers
+2. **Memory System** - 128KB RAM with memory-mapped I/O
+3. **Graphics** - 640x200 monochrome display with 80x25 text mode
+4. **Storage** - Two 360KB floppy disk drives for program and data storage
+5. **Operating System** - Minimal OS providing program loading, storage management, and basic I/O
 
-### Development Methodology
-The system follows a unique bootstrapping approach:
+### Development Bootstrap Process
+The system is built progressively without external toolchains:
 
-1. **Hardware Emulation**: JavaScript provides the foundational hardware simulation
-2. **Machine Language**: Direct processor instruction development
-3. **Assembler**: Self-hosted assembler written in machine language
-4. **C Compiler**: C compiler built using the assembler
-5. **BASIC Interpreter**: BASIC interpreter written in C
-6. **Progressive Enhancement**: Each layer builds upon and enhances the previous
+1. **Machine Language** - Direct binary programming of the RISC processor
+2. **Assembler** - Written in machine language to translate assembly to binary
+3. **C Compiler** - Written in assembly language to compile C code
+4. **BASIC Interpreter** - Written in C to provide high-level programming
+5. **Operating System** - Extended with features written in compiled languages
 
 ### User Experience
 
 #### For Learners
-- Clear, step-by-step progression from hardware to high-level languages
-- Visible intermediate representations at each compilation stage
-- Interactive debugging and inspection capabilities
-- Comprehensive documentation of design decisions
+- **Interactive Learning** - See code running in real-time on emulated hardware
+- **Progressive Complexity** - Start with simple programs, build to complex systems
+- **Visual Feedback** - Watch the computer execute instructions step by step
+- **Historical Context** - Experience computing as it was in the 1980s
 
 #### For Developers
-- Working example of classic computer science concepts
-- Reference implementation for custom processor design
-- Study of compiler and interpreter construction techniques
-- Understanding of operating system fundamentals
+- **Complete System View** - Understand how all components interconnect
+- **Debugging Tools** - Inspect processor state, memory contents, and I/O operations
+- **Performance Analysis** - Measure instruction timing and system performance
+- **Extensibility** - Add new instructions, peripherals, or capabilities
 
 ## User Experience Goals
 
-### Simplicity and Clarity
-- Clean, understandable code at every level
-- Progressive disclosure of complexity
-- Minimal but sufficient feature set
+### Simplicity
+- **Intuitive Interface** - Authentic 1980s computer interface that's easy to understand
+- **Clear Progression** - Each development stage builds naturally on the previous
+- **Minimal Dependencies** - Runs in any modern browser without additional setup
 
 ### Educational Value
-- Each component serves as a learning resource
-- Clear documentation of design trade-offs
-- Working examples that can be modified and extended
+- **Conceptual Clarity** - Each component demonstrates clear computer science principles
+- **Practical Application** - Every feature serves a real purpose in the system
+- **Historical Accuracy** - Represents authentic 1980s computing technology
 
-### Authenticity
-- Faithful reproduction of 1980s computing constraints
-- Realistic performance characteristics
-- Period-appropriate interface design
+### Engagement
+- **Immediate Feedback** - See results of code changes instantly
+- **Achievement Milestones** - Clear goals at each development stage
+- **Exploration Freedom** - Experiment with different approaches and optimizations
 
-### Completeness
-- Fully functional system from processor to high-level language
-- Self-contained development environment
-- No external toolchain dependencies
-
-## Success Metrics
-
-- **Educational Impact**: Clear demonstration of computer system layers
-- **Technical Achievement**: Functional self-hosted development environment
-- **Usability**: Intuitive interface for learning and experimentation
-- **Maintainability**: Clean, well-documented codebase for future enhancements
+### Technical Excellence
+- **Clean Architecture** - Well-structured, maintainable, and extensible design
+- **Comprehensive Testing** - Each component thoroughly tested before integration
+- **Performance Optimization** - Efficient emulation suitable for web deployment
+- **Documentation** - Clear explanations of how each component works

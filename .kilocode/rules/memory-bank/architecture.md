@@ -2,213 +2,188 @@
 
 ## System Architecture Overview
 
-The OrionRisc-128 follows a layered bootstrapping architecture that builds complexity progressively. Each layer serves as the foundation for the next, creating a self-hosting development environment.
+OrionRisc-128 is designed as a modular, component-based system that emulates a complete 1980s computer. The architecture follows a clear separation between hardware emulation, system software, and user interface layers.
 
-### Layer 1: Hardware Emulation Layer
-**Technology**: JavaScript/Node.js with browser rendering
-**Purpose**: Provides the foundational hardware simulation
-**Components**:
-- Processor emulation core
-- Memory management system (128KB RAM)
-- Graphics subsystem (640x200 monochrome)
-- Storage subsystem (2x 360KB floppy disks)
-- I/O device abstraction
+```mermaid
+graph TB
+    UIL[User Interface Layer]
+    BFE[Browser Frontend]
+    CGR[Canvas-based graphics rendering]
+    TEI[Terminal emulation interface]
+    WSC[WebSocket communication]
 
-### Layer 2: Machine Language Foundation
-**Technology**: Direct binary instruction format
-**Purpose**: Bootstrap development capability
-**Components**:
-- RISC instruction set architecture (ISA)
-- Machine code programming tools
-- Basic debugging facilities
-- Memory layout definitions
+    CL[Communication Layer]
+    WRT[WebSocket-based real-time communication]
+    EMP[Event-driven message passing]
 
-### Layer 3: Self-Hosted Assembler
-**Technology**: Machine language (built in Layer 2)
-**Purpose**: Enable symbolic assembly programming
-**Components**:
-- Assembly language parser
-- Machine code generation
-- Symbol table management
-- Assembly directives support
+    EL[Emulation Layer Express.js]
+    HC[Hardware Components]
+    CPU[RISC Processor CPU]
+    MMU[Memory Management Unit MMU]
+    GPU[Graphics Processing Unit GPU]
+    FDC[Floppy Disk Controller FDC]
 
-### Layer 4: C Compiler
-**Technology**: C (compiled with Layer 3 assembler)
-**Purpose**: High-level systems programming capability
-**Components**:
-- C preprocessor
-- C parser and semantic analysis
-- Code generation for RISC target
-- Standard library implementation
+    SS[System Software]
+    OSK[Operating System Kernel]
+    ASS[Assembler Machine Language]
+    COM[C Compiler Assembly Language]
+    INT[BASIC Interpreter C Language]
 
-### Layer 5: BASIC Interpreter
-**Technology**: BASIC (written in Layer 4 C)
-**Purpose**: User-friendly programming environment
-**Components**:
-- BASIC language parser
-- Runtime execution environment
-- Program editing facilities
-- Error handling and debugging
+    UIL --> BFE
+    BFE --> CGR
+    BFE --> TEI
+    BFE --> WSC
 
-### Layer 6: Operating System
-**Technology**: C (using Layer 4 compiler)
-**Purpose**: System management and program execution
-**Components**:
-- Program loading and execution
-- File system management
-- Memory allocation
-- Device I/O coordination
+    UIL --> CL
+    CL --> WRT
+    CL --> EMP
 
-## Source Code Organization
+    CL --> EL
+    EL --> HC
+    HC --> CPU
+    HC --> MMU
+    HC --> GPU
+    HC --> FDC
 
+    EL --> SS
+    SS --> OSK
+    SS --> ASS
+    SS --> COM
+    SS --> INT
+
+    style UIL fill:#e1f5fe
+    style CL fill:#f3e5f5
+    style EL fill:#e8f5e8
+    style HC fill:#fff3e0
+    style SS fill:#fce4ec
 ```
-orionrisc-128/
-├── src/
-│   ├── hardware/           # Layer 1: Hardware emulation
-│   │   ├── processor.js    # RISC processor core
-│   │   ├── memory.js       # Memory management (128KB)
-│   │   ├── graphics.js     # 640x200 graphics system
-│   │   ├── storage.js      # Floppy disk emulation
-│   │   └── io.js          # I/O device abstraction
-│   │
-│   ├── assembler/          # Layer 3: Self-hosted assembler
-│   │   ├── assembler.bin   # Machine code assembler
-│   │   ├── asm_parser.js   # Assembly parser utilities
-│   │   └── symbol_table.js # Symbol management
-│   │
-│   ├── compiler/           # Layer 4: C compiler
-│   │   ├── cpp/           # C preprocessor
-│   │   ├── parser/        # C language parser
-│   │   ├── codegen/       # RISC code generation
-│   │   └── libc/          # Standard library
-│   │
-│   ├── basic/             # Layer 5: BASIC interpreter
-│   │   ├── parser.js      # BASIC language parser
-│   │   ├── runtime.js     # Execution environment
-│   │   └── editor.js      # Program editor
-│   │
-│   └── os/                # Layer 6: Operating system
-│       ├── kernel.c       # Core OS functionality
-│       ├── fs.c           # File system
-│       ├── process.c      # Program management
-│       └── devices.c      # Device drivers
-│
-├── tools/
-│   ├── emulator.html      # Browser-based emulator UI
-│   └── dev_tools.js       # Development utilities
-│
-└── docs/
-    ├── isa.md            # Instruction set architecture
-    ├── assembly.md       # Assembly programming guide
-    └── c_guide.md        # C programming guide
-```
+
+## Component Architecture
+
+### Hardware Components
+
+#### 1. RISC Processor (CPU)
+- **Location**: `src/emulation/cpu/`
+- **Responsibility**: Execute machine instructions, manage registers and program counter
+- **Interface**:
+  - `execute(instruction)` - Execute single instruction
+  - `getRegister(index)` / `setRegister(index, value)` - Register access
+  - `getProgramCounter()` / `setProgramCounter(address)` - PC management
+- **Implementation**: 32-bit RISC architecture with 16 general-purpose registers
+
+#### 2. Memory Management Unit (MMU)
+- **Location**: `src/emulation/memory/`
+- **Responsibility**: Manage 128KB RAM, handle memory-mapped I/O
+- **Interface**:
+  - `readByte(address)` / `writeByte(address, value)` - Memory access
+  - `readWord(address)` / `writeWord(address, value)` - Word access
+  - `loadMemory(startAddress, data)` - Bulk memory operations
+- **Implementation**: 128KB RAM (0x0000-0xFFFF) with memory-mapped I/O regions
+
+#### 3. Graphics Processing Unit (GPU)
+- **Location**: `src/emulation/gpu/`
+- **Responsibility**: 640x200 monochrome graphics, 80x25 text mode
+- **Interface**:
+  - `setPixel(x, y, color)` - Draw individual pixels
+  - `drawCharacter(x, y, char, foreground, background)` - Text rendering
+  - `clearScreen()` - Screen clearing operations
+  - `render()` - Frame buffer to display rendering
+- **Implementation**: Frame buffer-based rendering with character ROM
+
+#### 4. Floppy Disk Controller (FDC)
+- **Location**: `src/emulation/storage/`
+- **Responsibility**: Manage two 360KB floppy disk drives
+- **Interface**:
+  - `mountDisk(drive, diskImage)` - Mount disk images
+  - `readSector(drive, track, sector)` - Read disk sectors
+  - `writeSector(drive, track, sector, data)` - Write disk sectors
+- **Implementation**: FAT12 file system emulation for simple file storage
+
+### System Software Components
+
+#### 5. Operating System Kernel
+- **Location**: `src/system/os/`
+- **Responsibility**: Program loading, basic I/O, system initialization
+- **Interface**:
+  - `loadProgram(programPath)` - Load executable programs
+  - `executeProgram(entryPoint)` - Execute loaded programs
+  - `handleInterrupt(interruptType)` - Interrupt handling
+- **Implementation**: Minimal OS providing basic system services
+
+#### 6. Assembler
+- **Location**: `src/system/assembler/`
+- **Responsibility**: Translate assembly language to machine code
+- **Interface**:
+  - `assemble(sourceCode)` - Assemble source to machine code
+  - `parseInstruction(mnemonic, operands)` - Parse individual instructions
+- **Implementation**: Written in machine language (self-hosting)
+
+#### 7. C Compiler
+- **Location**: `src/system/compiler/`
+- **Responsibility**: Compile C source code to assembly
+- **Interface**:
+  - `compile(sourceCode)` - Compile C to assembly
+  - `parseExpression(expression)` - Expression parsing
+  - `generateCode(ast)` - Code generation from AST
+- **Implementation**: Written in assembly language
+
+#### 8. BASIC Interpreter
+- **Location**: `src/system/interpreter/`
+- **Responsibility**: Execute BASIC programs
+- **Interface**:
+  - `interpret(sourceCode)` - Execute BASIC source
+  - `executeStatement(statement)` - Execute individual statements
+- **Implementation**: Written in C (compiled)
+
+### User Interface Components
+
+#### 9. Browser Frontend
+- **Location**: `src/frontend/`
+- **Responsibility**: Visual computer interface, user interaction
+- **Components**:
+  - Canvas-based graphics display
+  - Terminal emulation for text I/O
+  - Control panel for system management
+  - File browser for disk management
+
+#### 10. Communication Layer
+- **Location**: `src/communication/`
+- **Responsibility**: Real-time communication between frontend and backend
+- **Implementation**: WebSocket-based event system
 
 ## Key Technical Decisions
 
-### RISC Architecture Choice
-- **Decision**: Custom RISC ISA design
-- **Rationale**: Simplicity for educational purposes, easier to understand and implement
-- **Impact**: Reduced instruction complexity, clearer compiler targets
+### Bootstrap Development Approach
+1. **Phase 1**: Direct machine language programming
+2. **Phase 2**: Machine language assembler for assembly development
+3. **Phase 3**: Assembly-based C compiler for high-level language development
+4. **Phase 4**: C-based BASIC interpreter for user programming
 
-### Bootstrapping Methodology
-- **Decision**: Progressive layer-by-layer development
-- **Rationale**: Demonstrates self-hosting principles, no external toolchain dependency
-- **Impact**: Each layer must be completed before the next can be developed
+### Modular Design
+- Each component has clear interfaces and responsibilities
+- Components communicate through well-defined APIs
+- Easy to test, debug, and extend individual components
 
-### JavaScript Emulation Platform
-- **Decision**: Node.js with browser rendering
-- **Rationale**: Cross-platform compatibility, visual output capability, existing expertise
-- **Impact**: Web-based interface, easier distribution and demonstration
-
-### Memory Constraints
-- **Decision**: Strict 128KB RAM limit
-- **Rationale**: Authentic 1980s computing experience, encourages efficient design
-- **Impact**: Careful memory management required throughout all layers
-
-## Design Patterns in Use
-
-### Layered Architecture Pattern
-- Clear separation between hardware abstraction and software layers
-- Each layer provides services to the layer above
-- Dependencies flow downward only
-
-### Bootstrap Pattern
-- Each development tool is used to build the next more sophisticated tool
-- Demonstrates principles of self-hosting systems
-- Requires careful sequencing of component development
-
-### Emulator Pattern
-- Hardware components are simulated in software
-- Provides deterministic behavior for educational purposes
-- Enables debugging and inspection at all levels
-
-## Component Relationships
-
-### Hardware-Software Interface
-- Hardware emulation layer provides the foundation
-- All upper layers depend on hardware simulation
-- Clear interface boundaries between layers
-
-### Development Tool Chain
-- Assembler depends on machine language foundation
-- C compiler depends on assembler capability
-- BASIC interpreter depends on C compiler
-- OS depends on C compiler and runtime
-
-### Execution Flow
-- Hardware emulation runs continuously
-- OS manages program loading and execution
-- Development tools run within the emulated environment
-- User programs execute on the simulated hardware
+### Event-Driven Architecture
+- Hardware emulation uses event-driven updates
+- Frontend communicates through asynchronous events
+- Supports real-time debugging and inspection
 
 ## Critical Implementation Paths
 
-### Phase 1: Hardware Foundation
-1. Implement basic processor emulation with minimal instruction set
-2. Create memory management system
-3. Add graphics output capability
-4. Implement storage device simulation
+### Development Sequence
+1. **CPU Core** - Basic instruction execution engine
+2. **Memory System** - RAM and memory-mapped I/O
+3. **Graphics Rendering** - Frame buffer and character display
+4. **Storage System** - Floppy disk emulation
+5. **OS Kernel** - Program loading and execution
+6. **Assembler** - Self-hosting assembly development
+7. **C Compiler** - Cross-compilation to assembly
+8. **BASIC Interpreter** - High-level user interface
+9. **Frontend Interface** - Visual computer emulation
 
-### Phase 2: Machine Language Tools
-1. Define complete RISC instruction set
-2. Create machine code programming utilities
-3. Implement basic debugging facilities
-4. Test processor with simple programs
-
-### Phase 3: Assembler Development
-1. Write assembler in machine language
-2. Implement assembly parsing and code generation
-3. Add symbol table and linking capabilities
-4. Test assembler with complex programs
-
-### Phase 4: C Compiler Construction
-1. Implement C preprocessor using assembler
-2. Create C parser and semantic analyzer
-3. Develop RISC code generation backend
-4. Build minimal standard library
-
-### Phase 5: System Software
-1. Implement BASIC interpreter in C
-2. Create basic operating system kernel
-3. Add file system and device management
-4. Integrate all components into cohesive system
-
-## Architecture Constraints
-
-### Educational Focus
-- Code clarity prioritized over performance
-- Comprehensive documentation at each layer
-- Visible intermediate representations
-- Debugging capabilities at all levels
-
-### Authenticity Requirements
-- Faithful reproduction of 1980s constraints
-- Realistic performance characteristics
-- Period-appropriate interface design
-- Hardware limitations must be respected
-
-### Self-Hosting Requirements
-- Each layer must be buildable using previous layers
-- No external toolchain dependencies
-- Progressive enhancement of capabilities
-- Bootstrap process must be well-defined
+### Testing Strategy
+- Unit tests for individual components
+- Integration tests for component interactions
+- System tests for complete functionality
+- Bootstrap validation at each development phase

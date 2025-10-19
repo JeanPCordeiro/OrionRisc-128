@@ -1,147 +1,137 @@
-# OrionRisc-128 - Technical Specifications
+# OrionRisc-128 - Technology Stack
 
-## Technologies Used
+## Core Technologies
 
-### Core Technologies
-- **JavaScript (ES6+)**: Primary implementation language for hardware emulation
-- **Node.js**: Runtime environment for server-side emulation
-- **HTML5 Canvas**: Graphics rendering and display output
-- **Browser APIs**: Web-based user interface and interaction
+### Emulation Platform
+- **JavaScript (ES2020+)** - Primary development language for all emulation code
+- **Node.js** - Runtime environment for the emulation backend
+- **Express.js** - Web framework for the emulation server and API endpoints
+- **WebSocket** - Real-time communication between frontend and backend
 
-### Emulated System Technologies
-- **Custom RISC ISA**: Reduced instruction set architecture design
-- **Assembly Language**: Symbolic machine code programming
-- **C Programming Language**: Systems programming capability
-- **BASIC Interpreter**: High-level user programming environment
+### Frontend Technologies
+- **HTML5 Canvas** - Graphics rendering and display emulation
+- **Web Audio API** - Sound emulation (future enhancement)
+- **Modern Web Standards** - Progressive enhancement for better performance
+
+### Development Tools
+- **Visual Studio Code** - Primary development environment
+- **ESLint** - Code linting and style enforcement
+- **Prettier** - Code formatting
+- **Jest** - Unit testing framework for JavaScript components
 
 ## Development Setup
-
-### Development Environment
-- **Node.js**: Version 16.0 or higher
-- **Modern Web Browser**: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **Text Editor**: VS Code or similar with JavaScript support
-- **Git**: Version control system
 
 ### Project Structure
 ```
 orionrisc-128/
-├── src/                 # Source code directory
-│   ├── hardware/       # Hardware emulation layer
-│   ├── assembler/      # Assembly language tools
-│   ├── compiler/       # C compiler implementation
-│   ├── basic/         # BASIC interpreter
-│   └── os/           # Operating system kernel
-├── tools/             # Development and debugging tools
-├── docs/             # Documentation
-└── tests/            # Test suites
+├── src/
+│   ├── emulation/          # Hardware component emulation
+│   │   ├── cpu/           # RISC processor implementation
+│   │   ├── memory/        # Memory management unit
+│   │   ├── gpu/           # Graphics processing unit
+│   │   └── storage/       # Floppy disk controller
+│   ├── system/            # System software
+│   │   ├── os/           # Operating system kernel
+│   │   ├── assembler/     # Assembly language translator
+│   │   ├── compiler/      # C compiler
+│   │   └── interpreter/   # BASIC interpreter
+│   ├── frontend/          # Browser-based user interface
+│   └── communication/     # WebSocket communication layer
+├── tests/                 # Test suites for all components
+├── docs/                  # Documentation and specifications
+└── tools/                 # Development and build tools
 ```
 
-### Build Process
-- **No build step required**: JavaScript files run directly in Node.js/browser
-- **Hardware emulation**: Runs in both Node.js and browser environments
-- **Progressive development**: Each layer tested before implementing the next
+### Environment Requirements
+- **Node.js 16+** - Minimum runtime version
+- **Modern Browser** - Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **Minimum RAM** - 512MB (2GB recommended for development)
+- **Screen Resolution** - 1024x768 minimum (1920x1080 recommended)
 
 ## Technical Constraints
 
-### Hardware Limitations (Emulated)
-- **Memory**: 128KB RAM (131,072 bytes)
-- **Graphics**: 640x200 monochrome display
-- **Text Mode**: 80x25 character display
-- **Storage**: 2x 360KB floppy disk drives
-- **Processor**: Custom RISC architecture with limited instruction set
+### Bootstrap Development Philosophy
+- **No External Toolchains** - All development tools built within the system itself
+- **Self-Hosting Progression** - Each tool enables development of the next
+- **Minimal Dependencies** - Only essential runtime dependencies allowed
 
 ### Performance Constraints
-- **Educational focus**: Code clarity prioritized over performance
-- **Realistic emulation**: Authentic 1980s performance characteristics
-- **Browser compatibility**: Must run efficiently in web browsers
-- **Memory efficiency**: Must operate within 128KB emulated RAM
+- **Emulation Speed** - Target 1MHz effective emulation speed
+- **Memory Usage** - Efficient memory management for 128KB emulated RAM
+- **Browser Compatibility** - Support all modern browsers without polyfills
 
-### Self-Hosting Constraints
-- **No external toolchain**: All tools must be built within the system
-- **Progressive complexity**: Each layer builds upon previous layers
-- **Bootstrap requirement**: Machine language before assembler, assembler before C compiler
+### Code Organization
+- **Modular Architecture** - Clear separation between hardware and software components
+- **Interface Contracts** - Well-defined APIs between system components
+- **Testable Units** - Each component designed for independent testing
 
 ## Dependencies
 
 ### Runtime Dependencies
-- **Node.js**: Server-side JavaScript runtime
-- **Web Browser**: Client-side execution environment
-- **HTML5 Canvas API**: Graphics rendering capability
+```json
+{
+  "express": "^4.18.0",
+  "ws": "^8.13.0",
+  "canvas": "^2.11.0"
+}
+```
 
 ### Development Dependencies
-- **No external build tools**: Self-contained development environment
-- **Git**: Version control (optional but recommended)
-- **Text editor**: Code editing and project management
+```json
+{
+  "jest": "^29.5.0",
+  "eslint": "^8.40.0",
+  "prettier": "^2.8.8",
+  "@types/node": "^18.16.0",
+  "@types/express": "^4.17.17",
+  "@types/ws": "^8.5.5"
+}
+```
 
 ## Tool Usage Patterns
 
 ### Development Workflow
-1. **Hardware Layer**: Implement processor, memory, graphics in JavaScript
-2. **Machine Language**: Write binary programs directly for testing
-3. **Assembler**: Implement assembler using machine language tools
-4. **C Compiler**: Build C compiler using assembler
-5. **BASIC Interpreter**: Implement BASIC using C compiler
-6. **OS Integration**: Create operating system using C compiler
+1. **Component Development** - Implement individual hardware/software components
+2. **Unit Testing** - Test each component in isolation
+3. **Integration Testing** - Verify component interactions
+4. **System Testing** - Validate complete system functionality
 
-### Testing Strategy
-- **Layer-by-layer testing**: Each component tested before integration
-- **Hardware emulation testing**: Verify against expected behavior
-- **Cross-compilation testing**: Test tools against known good examples
-- **Integration testing**: Full system testing with complete toolchain
+### Code Quality
+- **ESLint Configuration** - Enforce consistent code style
+- **Prettier Integration** - Automated code formatting
+- **Jest Testing** - Comprehensive test coverage requirements
+- **Documentation** - Inline comments and API documentation
 
-### Debugging Approach
-- **Hardware emulation debugging**: JavaScript debugging tools
-- **Machine language debugging**: Direct memory and register inspection
-- **Assembly debugging**: Symbol table and source mapping
-- **C debugging**: Source-level debugging with compiler integration
+### Version Control Strategy
+- **Feature Branches** - Isolate component development
+- **Pull Request Reviews** - Code review before integration
+- **Semantic Versioning** - Clear version progression tracking
 
-## Platform Requirements
+## Build and Deployment
 
-### Browser Compatibility
-- **Graphics**: HTML5 Canvas support required
-- **JavaScript**: ES6+ features (classes, modules, async/await)
-- **Memory**: Sufficient browser memory for emulation
-- **Performance**: Modern JavaScript engine for adequate emulation speed
+### Development Server
+- **Express.js Server** - Hot-reload for development
+- **WebSocket Integration** - Real-time debugging capabilities
+- **Static File Serving** - Frontend asset management
 
-### Node.js Compatibility
-- **Version**: Node.js 16.0 or higher
-- **Modules**: ES6 module support
-- **File system**: For loading and saving disk images
-- **Network**: Optional web server for browser hosting
+### Production Build
+- **Minification** - JavaScript and CSS optimization
+- **Asset Optimization** - Image and resource compression
+- **Security Headers** - Production security best practices
 
-## Security Considerations
+## Testing Strategy
 
-### Sandbox Environment
-- **Emulated system isolation**: Hardware emulation runs in JavaScript sandbox
-- **No external dependencies**: Self-contained system reduces attack surface
-- **Browser security**: Standard web security model applies
+### Unit Testing
+- **Component Isolation** - Test each hardware/software component independently
+- **Mock Interfaces** - Simulate component interactions
+- **Edge Case Coverage** - Comprehensive error condition testing
 
-### Educational Safety
-- **No real hardware interaction**: Pure software emulation
-- **Controlled environment**: Predictable execution environment
-- **No system modifications**: Cannot affect host system
+### Integration Testing
+- **Component Communication** - Verify API contracts between components
+- **System Integration** - Test complete system functionality
+- **Performance Testing** - Validate emulation speed and resource usage
 
-## Performance Targets
-
-### Emulation Speed
-- **Target**: Real-time or near real-time performance
-- **Minimum**: Interactive responsiveness for educational use
-- **Optimization focus**: Efficient instruction decoding and memory access
-
-### Memory Usage
-- **Host system**: Minimize browser/Node.js memory footprint
-- **Emulated system**: Strict 128KB RAM limitation
-- **Graphics**: Efficient canvas rendering and updates
-
-## Compatibility Goals
-
-### Cross-Platform Support
-- **Windows**: Modern browsers and Node.js
-- **macOS**: Safari, Chrome, Firefox, Node.js
-- **Linux**: Chrome, Firefox, Node.js
-- **Mobile**: Limited support for demonstration purposes
-
-### Future Evolution
-- **Extensibility**: Architecture designed for future enhancements
-- **Documentation**: Comprehensive documentation for maintainers
-- **Testing**: Test suite for regression prevention
+### Bootstrap Validation
+- **Phase Verification** - Ensure each development phase works correctly
+- **Tool Chain Testing** - Validate self-hosted development tools
+- **Regression Testing** - Prevent functionality breakage during development

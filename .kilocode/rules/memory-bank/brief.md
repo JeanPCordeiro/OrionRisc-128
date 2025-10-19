@@ -6,13 +6,19 @@ My goal is to design from scratch a very simple 80´s computer :
 3. A basic operating System to store, load and run programs 
 4. A minimal assembler 
 5. A minimal C compiler using the assembler 
-6. A minimal basic interpreter writed on C.
+6. A minimal basic interpreter writed on C
 
-I dont want a toilchain :
+dont use a toolchain :
 1. The assembler must be write directly on machine language
 2. The c compiler with the assembler
 3. The basic interpreter with the c compiler
 4. The system must be writed progressively with himself
 5. JavaScript is only used for emulate the computer hardware
 
-The computer is a simulated by a node program with a browser rendering using the OrionRisc-128.png as frame.
+The computer is a simulated by :
+1. an epressjs server backend for the core emulation
+2. a browser frontend for the rendering using the OrionRisc-128.png as core frame.
+
+Implementation must be made step by step
+Each step must have tests and be tested
+implementation must be well structured with distinct files
