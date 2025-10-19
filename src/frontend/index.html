@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrionRisc-128 Computer System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="computer-frame">
+        <!-- Main Computer Body -->
+        <div class="computer-body">
+            <!-- Screen Bezel -->
+            <div class="screen-bezel">
+                <!-- Display Area -->
+                <div class="display-area">
+                    <!-- Graphics Canvas -->
+                    <canvas id="graphics-canvas" width="640" height="200"></canvas>
+
+                    <!-- Terminal Overlay (for text mode) -->
+                    <div id="terminal-overlay" class="terminal-overlay">
+                        <div id="terminal-output" class="terminal-output"></div>
+                        <div class="terminal-input-line">
+                            <span class="prompt">></span>
+                            <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false">
+                            <span class="cursor">|</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="status-indicators">
+                    <div class="indicator">
+                        <span class="indicator-label">POWER</span>
+                        <span id="power-indicator" class="indicator-light off">○</span>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">RUN</span>
+                        <span id="run-indicator" class="indicator-light off">○</span>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">DISK A</span>
+                        <span id="disk-a-indicator" class="indicator-light off">○</span>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">DISK B</span>
+                        <span id="disk-b-indicator" class="indicator-light off">○</span>
+                    </div>
+                </div>
+
+                <div class="control-buttons">
+                    <button id="power-btn" class="control-btn">POWER</button>
+                    <button id="reset-btn" class="control-btn">RESET</button>
+                    <button id="load-btn" class="control-btn">LOAD</button>
+                    <button id="save-btn" class="control-btn">SAVE</button>
+                </div>
+            </div>
+
+            <!-- Keyboard Area -->
+            <div class="keyboard-area">
+                <div class="keyboard-hint">Click here and type to interact with BASIC</div>
+            </div>
+        </div>
+
+        <!-- Side Panel -->
+        <div class="side-panel">
+            <!-- File Browser -->
+            <div class="file-browser">
+                <h3>Disk Drive A:</h3>
+                <div id="disk-a-files" class="file-list"></div>
+                <button id="mount-disk-a" class="disk-btn">Mount Disk</button>
+
+                <h3>Disk Drive B:</h3>
+                <div id="disk-b-files" class="file-list"></div>
+                <button id="mount-disk-b" class="disk-btn">Mount Disk</button>
+            </div>
+
+            <!-- System Status -->
+            <div class="system-status">
+                <h3>System Status</h3>
+                <div class="status-info">
+                    <div class="status-item">
+                        <span class="status-label">CPU:</span>
+                        <span id="cpu-status">STOPPED</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Memory:</span>
+                        <span id="memory-status">0KB / 128KB</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">PC:</span>
+                        <span id="pc-status">0x0000</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Instructions:</span>
+                        <span id="instruction-count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug Panel (Collapsible) -->
+            <div class="debug-panel">
+                <button id="debug-toggle" class="debug-toggle">Debug Info</button>
+                <div id="debug-content" class="debug-content" style="display: none;">
+                    <div class="debug-item">
+                        <span class="debug-label">Registers:</span>
+                        <div id="register-display" class="register-display"></div>
+                    </div>
+                    <div class="debug-item">
+                        <span class="debug-label">Last Instruction:</span>
+                        <span id="last-instruction">None</span>
+                    </div>
+                    <div class="debug-item">
+                        <span class="debug-label">System Calls:</span>
+                        <span id="system-calls">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div id="connection-status" class="connection-status disconnected">
+        Disconnected from emulation server
+    </div>
+
+    <script src="websocket.js"></script>
+    <script src="main.js"></script>
+    <script src="terminal.js"></script>
+    <script src="graphics.js"></script>
+    <script src="controls.js"></script>
+    <script src="filebrowser.js"></script>
+</body>
+</html>

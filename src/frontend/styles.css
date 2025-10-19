@@ -1,0 +1,523 @@
+/* OrionRisc-128 - 1980s Computer Interface Styling */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Share Tech Mono', monospace;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Main Computer Frame */
+.computer-frame {
+    display: flex;
+    background: linear-gradient(145deg, #2d2d3a, #1f1f2e);
+    border: 3px outset #4a4a5a;
+    border-radius: 15px;
+    box-shadow:
+        0 0 30px rgba(0, 255, 136, 0.3),
+        inset 0 0 20px rgba(0, 0, 0, 0.5);
+    max-width: 1200px;
+    width: 100%;
+    min-height: 600px;
+}
+
+/* Computer Body */
+.computer-body {
+    flex: 1;
+    padding: 20px;
+    background: linear-gradient(145deg, #252536, #1a1a26);
+    border: 2px inset #3a3a4a;
+    border-radius: 10px;
+}
+
+/* Screen Bezel */
+.screen-bezel {
+    background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+    border: 4px outset #333;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow:
+        inset 0 0 20px rgba(0, 0, 0, 0.8),
+        0 0 15px rgba(0, 255, 136, 0.2);
+    margin-bottom: 20px;
+}
+
+/* Display Area */
+.display-area {
+    position: relative;
+    background: #000;
+    border: 2px inset #222;
+    border-radius: 4px;
+    aspect-ratio: 640/200;
+    max-height: 250px;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+/* Graphics Canvas */
+#graphics-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* Terminal Overlay */
+.terminal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    line-height: 1.2;
+    color: #00ff88;
+    padding: 10px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.terminal-output {
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-bottom: 5px;
+}
+
+.terminal-input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+
+.prompt {
+    color: #ffff00;
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.terminal-input {
+    background: transparent;
+    border: none;
+    color: #00ff88;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    flex: 1;
+    min-width: 0;
+}
+
+.cursor {
+    color: #00ff88;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Control Panel */
+.control-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(145deg, #2a2a3a, #1f1f2f);
+    border: 2px outset #4a4a5a;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 20px;
+}
+
+.indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.indicator-label {
+    font-size: 10px;
+    color: #cccccc;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.indicator-light {
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.indicator-light.on {
+    color: #00ff88;
+    text-shadow: 0 0 10px #00ff88;
+}
+
+.indicator-light.off {
+    color: #333;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.control-btn {
+    background: linear-gradient(145deg, #3a3a4a, #2a2a3a);
+    border: 2px outset #5a5a6a;
+    border-radius: 4px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+}
+
+.control-btn:hover {
+    background: linear-gradient(145deg, #4a4a5a, #3a3a4a);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+}
+
+.control-btn:active {
+    border: 2px inset #5a5a6a;
+    transform: translateY(0);
+}
+
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Keyboard Area */
+.keyboard-area {
+    background: linear-gradient(145deg, #1f1f2f, #1a1a2a);
+    border: 2px inset #3a3a4a;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    color: #888;
+    font-size: 12px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.keyboard-hint {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.keyboard-area:focus-within .keyboard-hint {
+    opacity: 0.3;
+}
+
+/* Side Panel */
+.side-panel {
+    width: 250px;
+    background: linear-gradient(145deg, #2d2d3a, #202036);
+    border: 2px outset #4a4a5a;
+    border-radius: 10px;
+    padding: 15px;
+    margin-left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* File Browser */
+.file-browser {
+    background: linear-gradient(145deg, #1f1f2f, #1a1a2a);
+    border: 2px inset #3a3a4a;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.file-browser h3 {
+    color: #00ff88;
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.file-list {
+    background: #000;
+    border: 1px inset #333;
+    border-radius: 3px;
+    padding: 8px;
+    min-height: 60px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #00ff88;
+    overflow-y: auto;
+    max-height: 80px;
+}
+
+.disk-btn {
+    background: linear-gradient(145deg, #3a3a4a, #2a2a3a);
+    border: 1px outset #5a5a6a;
+    border-radius: 3px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.disk-btn:hover {
+    background: linear-gradient(145deg, #4a4a5a, #3a3a4a);
+    box-shadow: 0 2px 6px rgba(0, 255, 136, 0.2);
+}
+
+/* System Status */
+.system-status {
+    background: linear-gradient(145deg, #1f1f2f, #1a1a2a);
+    border: 2px inset #3a3a4a;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.system-status h3 {
+    color: #00ff88;
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: #cccccc;
+}
+
+.status-label {
+    color: #999;
+}
+
+#cpu-status, #memory-status, #pc-status, #instruction-count {
+    color: #00ff88;
+    font-weight: bold;
+}
+
+/* Debug Panel */
+.debug-panel {
+    background: linear-gradient(145deg, #1f1f2f, #1a1a2a);
+    border: 2px inset #3a3a4a;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.debug-toggle {
+    background: linear-gradient(145deg, #3a3a4a, #2a2a3a);
+    border: 1px outset #5a5a6a;
+    border-radius: 3px;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.debug-toggle:hover {
+    background: linear-gradient(145deg, #4a4a5a, #3a3a4a);
+}
+
+.debug-content {
+    font-size: 10px;
+    color: #cccccc;
+}
+
+.debug-item {
+    margin-bottom: 8px;
+}
+
+.debug-label {
+    color: #999;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.register-display {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.register-display div {
+    background: #000;
+    border: 1px inset #333;
+    padding: 2px 4px;
+    text-align: center;
+    color: #00ff88;
+    font-family: monospace;
+}
+
+/* Connection Status */
+.connection-status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.connection-status.connected {
+    background: rgba(0, 255, 136, 0.9);
+    color: #000;
+}
+
+.connection-status.disconnected {
+    background: rgba(255, 0, 0, 0.9);
+    color: #fff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .computer-frame {
+        flex-direction: column;
+        max-width: 100%;
+        margin: 10px;
+    }
+
+    .side-panel {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 15px;
+    }
+
+    .control-panel {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .status-indicators {
+        justify-content: center;
+    }
+
+    .control-buttons {
+        justify-content: center;
+    }
+
+    .display-area {
+        max-height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .computer-body {
+        padding: 10px;
+    }
+
+    .screen-bezel {
+        padding: 10px;
+    }
+
+    .status-indicators {
+        gap: 10px;
+    }
+
+    .control-buttons {
+        gap: 5px;
+    }
+
+    .control-btn {
+        padding: 6px 8px;
+        font-size: 10px;
+    }
+}
+
+/* Terminal Input Focus Styles */
+.terminal-input:focus {
+    outline: none;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+/* Scrollbar Styling */
+.file-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-list::-webkit-scrollbar-track {
+    background: #111;
+    border-radius: 2px;
+}
+
+.file-list::-webkit-scrollbar-thumb {
+    background: #00ff88;
+    border-radius: 2px;
+}
+
+.file-list::-webkit-scrollbar-thumb:hover {
+    background: #00cc66;
+}
+
+/* Animation for system startup */
+@keyframes startup-glow {
+    0% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+    100% { box-shadow: 0 0 5px rgba(0, 255, 136, 0.2); }
+}
+
+.computer-frame.starting {
+    animation: startup-glow 2s ease-in-out;
+}
+
+/* File item hover effects */
+.file-list div {
+    padding: 2px 4px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.file-list div:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
