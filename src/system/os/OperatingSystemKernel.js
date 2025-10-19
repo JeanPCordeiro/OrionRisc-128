@@ -61,6 +61,11 @@ class OperatingSystemKernel {
             this.cpu.reset();
             this.mmu.clearMemory();
 
+            // Set up system call handler
+            this.cpu.setSystemCallHandler((syscallNumber) => {
+                this.handleSystemCall(syscallNumber);
+            });
+
             // Initialize memory layout
             this.initializeMemoryLayout();
 

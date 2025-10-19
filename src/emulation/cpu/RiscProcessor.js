@@ -22,6 +22,9 @@ class RiscProcessor {
         this.isRunning = false;
         this.isHalted = false;
 
+        // System call handler (set by OS)
+        this.systemCallHandler = null;
+
         // Instruction set constants
         this.INSTRUCTIONS = {
             NOP: 0x00,    // No operation
@@ -29,6 +32,7 @@ class RiscProcessor {
             STORE: 0x02,  // Store register to memory
             ADD: 0x03,    // Add two registers
             SUB: 0x04,    // Subtract two registers
+            SYSCALL: 0x05, // System call
             HALT: 0xFF    // Halt execution
         };
 
@@ -48,6 +52,9 @@ class RiscProcessor {
         // Reset CPU state
         this.isRunning = false;
         this.isHalted = false;
+
+        // Clear system call handler
+        this.systemCallHandler = null;
 
         console.log('RISC Processor reset to initial state');
     }
@@ -88,6 +95,17 @@ class RiscProcessor {
     setProgramCounter(address) {
         this.validateAddress(address);
         this.programCounter = address;
+    }
+
+    /**
+     * Set system call handler function
+     * @param {Function} handler - Function to handle system calls (receives syscall number)
+     */
+    setSystemCallHandler(handler) {
+        if (typeof handler !== 'function' && handler !== null) {
+            throw new Error('System call handler must be a function or null');
+        }
+        this.systemCallHandler = handler;
     }
 
     /**
@@ -144,6 +162,17 @@ class RiscProcessor {
                     this.validateRegisterIndex(reg1);
                     this.validateRegisterIndex(reg2);
                     this.registers[reg1] = (this.registers[reg1] - this.registers[reg2]) & 0xFFFFFFFF;
+                    break;
+
+                case this.INSTRUCTIONS.SYSCALL:
+                    // SYSCALL - Trigger system call interrupt
+                    // System call number should be in R0
+                    // The OS will handle the interrupt and execute the system call
+                    // For now, we'll simulate this by calling a callback if provided
+                    if (this.systemCallHandler) {
+                        const syscallNumber = this.registers[0] & 0xFF;
+                        this.systemCallHandler(syscallNumber);
+                    }
                     break;
 
                 case this.INSTRUCTIONS.HALT:
@@ -304,11 +333,11 @@ class RiscProcessor {
                 throw new Error(`Invalid instruction at index ${i}: ${instruction}`);
             }
 
-            // Split 32-bit instruction into 4 bytes (little-endian)
-            byteData.push((instruction >> 0) & 0xFF);
-            byteData.push((instruction >> 8) & 0xFF);
-            byteData.push((instruction >> 16) & 0xFF);
-            byteData.push((instruction >> 24) & 0xFF);
+            // Split 32-bit instruction into 4 bytes (big-endian for CPU)
+            byteData.push((instruction >> 24) & 0xFF); // Byte 3 (MSB) - opcode
+            byteData.push((instruction >> 16) & 0xFF); // Byte 2 - reg1, reg2
+            byteData.push((instruction >> 8) & 0xFF);  // Byte 1 - immediate high
+            byteData.push(instruction & 0xFF);         // Byte 0 (LSB) - immediate low
         }
 
         // Load program into memory
